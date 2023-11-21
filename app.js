@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const connect = require('./src/db');
@@ -9,6 +10,11 @@ const boardRouter = require('./src/board/router');
 
 const app = express();
 connect();
+
+app.use(cors({
+  origin: true,
+  credentials: false,
+}));
 
 app.use(morgan('dev'));
 app.use(express.json());
