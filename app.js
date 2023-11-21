@@ -20,6 +20,10 @@ app.get("/api", (req, res) => {
   res.send('test');
 });
 
+app.get('/', (req, res) => {
+  res.send('hi');
+});
+
 app.use((req, res, next) => {
     const error = new Error(`${req.method} ${req.url} 라우터가 존재하지 않습니다.`);
     error.status = 404;
