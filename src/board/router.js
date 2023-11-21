@@ -80,6 +80,7 @@ router.get('/category/:name', async (req, res, next) => {
         const perPage = 4;
         const category = req.params.name;
         const categoryBoardsResult = await boardService.getCategoryBoards(category, currentPage, perPage);
+        if (categoryBoardsResult.status === 404) return res.status(404).json(categoryBoardsResult);
         return res.status(200).json(categoryBoardsResult)
     } catch (error) {
         console.error(error);

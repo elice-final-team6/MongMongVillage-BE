@@ -84,6 +84,12 @@ exports.getCategoryBoards = async (category, currentPage, perPage) => {
                     .sort({ createdAt: -1 })
                     .skip((currentPage - 1) * perPage)
                     .limit(perPage);
+        if (boards.length === 0) {
+            return {
+                status: 404,
+                message: "게시글이 존재하지 않습니다."
+            }
+        }
         return {
             status: 200,
             total_number_of_boards, 
