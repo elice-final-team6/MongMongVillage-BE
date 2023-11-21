@@ -53,7 +53,7 @@ router.delete('/:id', async (req, res, next) => {
         if (deleteBoardResult.status === 200)
             return res.status(200).json(deleteBoardResult);
         else
-            return res.status(400).json(deleteBoardResult);
+            return res.status(404).send(deleteBoardResult.message);
     } catch (error) {
         console.error(error);
         next(error);
@@ -80,7 +80,8 @@ router.get('/category/:name', async (req, res, next) => {
         const perPage = 4;
         const category = req.params.name;
         const categoryBoardsResult = await boardService.getCategoryBoards(category, currentPage, perPage);
-        if (categoryBoardsResult.status === 404) return res.status(404).json(categoryBoardsResult);
+        if (categoryBoardsResult.status === 404) 
+            return res.status(404).send(categoryBoardsResult.message);
         return res.status(200).json(categoryBoardsResult)
     } catch (error) {
         console.error(error);
@@ -107,13 +108,16 @@ router.put('/:id/liked', async (req, res, next) => {
         const isLiked = await boardService.getLiked(boardId, userId);
         let likedBoardResult;
 
+        if (isLiked.message) 
+            return res.status(404).send(isLiked.message);
+
         if (!isLiked.checked) 
             likedBoardResult = await boardService.setLiked(boardId, userId);
         else
             likedBoardResult = await boardService.deleteLiked(boardId, userId);
 
         if (likedBoardResult.status === 400) {
-            return res.status(400).json(likedBoardResult);
+            return res.status(400).send(likedBoardResult.message);
         }
         return res.status(200).json(likedBoardResult);
     } catch (error) {
@@ -153,10 +157,10 @@ router.get('/mypage/user', async (req, res, next) => {
 // 회원이 좋아요 누른 게시글 목록
 router.get('/mypage/user/liked', async (req, res, next) => {
     try {
-        const userId = '655b7088517643964f77aa48';
+        const userId = '655ac300ee052627917debf7';
         const userLikedBoardResult = await boardService.getUserLikedBoards(userId);
-        if (res.message) {
-            res.status(404).json(userLikedBoardResult);
+        if (userLikedBoardResult.message) {
+            res.status(404).send(userLikedBoardResult.message);
         }
         return res.status(200).json(userLikedBoardResult);
     } catch (error) {

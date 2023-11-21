@@ -5,9 +5,6 @@ const Comment = require('../comment/model/comment.schema');
 
 exports.createBoard = async ({ userId, title, content, animalType, category, imageUrl }) => {
     try {
-        animalType = animalType || null;
-        category = category || null;
-
         const board = await Board.create({
             user_id: userId,
             comment_id: [],
@@ -60,7 +57,7 @@ exports.getAllBoards = async (currentPage, perPage) => {
                 .skip((currentPage - 1) * perPage)
                 .limit(perPage)
                 .populate({ path: 'user_id', select: '_id image nickname' });
-    if (boards.length === 0) {
+    if (!boards.length) {
         return {
             status: 404,
             message: '게시글이 존재하지 않습니다.'
@@ -84,7 +81,7 @@ exports.getCategoryBoards = async (category, currentPage, perPage) => {
                     .sort({ createdAt: -1 })
                     .skip((currentPage - 1) * perPage)
                     .limit(perPage);
-        if (boards.length === 0) {
+        if (!boards.length) {
             return {
                 status: 404,
                 message: "게시글이 존재하지 않습니다."
@@ -120,7 +117,7 @@ exports.getBestBoards = async () => {
 exports.getUserBoards = async (userId) => {
     try {
         const board = await Board.find({ user_id: userId });
-        if (board.length === 0) {
+        if (!board.length) {
             return {
                 status: 404,
                 message: "게시글이 존재하지 않습니다."
@@ -142,7 +139,7 @@ exports.getUserLikedBoards = async (userId) => {
                         .populate({ path: 'board_id', select: '_id title content createdAt updatedAt comment_id' })
                         .select('_id user_id board_id');
 
-        if (liked.length === 0) {
+        if (!liked.length) {
             return {
                 status: 404,
                 message: "게시글이 존재하지 않습니다."
@@ -185,10 +182,15 @@ exports.getDetailBoard = async (boardId) => {
 
 exports.getLiked = async (boardId, userId) => {
     try {
+        const board = await Board.findById({ _id: boardId });
+        if (!board) return { message: '존재하지 않는 게시글입니다.'};
+
         const isLikedResult = await Like.findOne({ board_id: boardId, user_id: userId });
         console.log(isLikedResult);
-        if (isLikedResult === null) return { checked: false };
-        else return { checked: true };
+        if (isLikedResult === null) 
+            return { checked: false };
+        else 
+            return { checked: true };
     } catch (error) {
         throw error;
     }
