@@ -1,39 +1,40 @@
 const express = require("express");
-const cors = require('cors');
-const morgan = require('morgan');
-const dotenv = require('dotenv');
-const connect = require('./src/db');
+const cors = require("cors");
+const morgan = require("morgan");
+const dotenv = require("dotenv");
+const connect = require("./src/db");
 
 dotenv.config();
 const userRouter = require("./src/user/router");
 const boardRouter = require("./src/board/router");
 const commentRouter = require("./src/comment/router");
+const reviewRouter = require("./src/review/router");
 
 const app = express();
 connect();
 
-app.use(cors({
-  origin: true,
-  credentials: false,
-}));
+app.use(
+  cors({
+    origin: true,
+    credentials: false,
+  })
+);
 
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// app.use(passport.initialize());
-// app.use(getUserFromJWT);
 
 app.use("/api/users", userRouter);
 app.use("/api/boards", boardRouter);
 app.use("/api/comments", commentRouter);
+app.use("/api/reviews", reviewRouter);
 
 app.get("/api", (req, res) => {
   res.send("test");
 });
 
-app.get('/', (req, res) => {
-  res.send('hi');
+app.get("/", (req, res) => {
+  res.send("hi");
 });
 
 app.use((req, res, next) => {

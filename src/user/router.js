@@ -26,8 +26,7 @@ router.post(
       // 회원가입 성공
       res.status(201).json({
         status: 201,
-        message: "Success",
-        data: user,
+        message: "회원가입 성공",
       });
     } catch (error) {
       if (error.code === 11000 && error.keyPattern.email) {
@@ -85,7 +84,7 @@ router.post(
 
     res.status(200).json({
       status: 200,
-      message: "success",
+      message: "로그인 성공",
       data: token,
     });
   })
@@ -117,8 +116,9 @@ router.post(
 // 회원 정보 조회
 router.get(
   "/:userId",
+  JwtMiddleware.checkToken,
   asyncHandler(async (req, res) => {
-    const userId = req.params.userId;
+    const userId = req.token.userId;
 
     // ObjectId가 유효한지 확인
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -155,7 +155,8 @@ router.get(
 // 회원 정보 수정
 router.put("/:userId", JwtMiddleware.checkToken, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.token.userId;
+
     const updatedUserInfo = req.body;
 
     const updatedUser = await userService.updateUser(userId, updatedUserInfo);
@@ -180,7 +181,7 @@ router.delete(
   "/:userId",
   JwtMiddleware.checkToken,
   asyncHandler(async (req, res) => {
-    const userId = req.params.userId;
+    const userId = req.token.userId;
 
     try {
       const user = await userService.deleteUser(userId);
