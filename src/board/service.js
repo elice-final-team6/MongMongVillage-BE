@@ -100,6 +100,12 @@ exports.getAllBoards = async (currentPage, perPage) => {
 
 exports.getCategoryBoards = async (category, currentPage, perPage) => {
     try {
+        if (category !== 'info' || category !== 'general' || category !== 'question') {
+            return {
+                status: 400,
+                message: '해당 카테고리가 존재하지 않습니다.'
+            }
+        }
         const total_number_of_boards = await Board.countDocuments({ category: category });
         const boards = await Board 
                     .find({ category: category })
@@ -151,7 +157,7 @@ exports.getSearchBoards = async(content, currentPage, perPage) => {
                         .skip((currentPage - 1) * perPage)
                         .limit(perPage)
                         .populate({ path: 'user_id', select: '_id image nickname' });
-        if (!boards) {
+        if (!boards.length) {
             return {
                 status: 400,
                 message: '검색 결과가 없습니다.'
