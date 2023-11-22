@@ -100,7 +100,7 @@ exports.getAllBoards = async (currentPage, perPage) => {
 
 exports.getCategoryBoards = async (category, currentPage, perPage) => {
     try {
-        if (category !== 'info' || category !== 'general' || category !== 'question') {
+        if (category !== 'info' && category !== 'general' && category !== 'question') {
             return {
                 status: 400,
                 message: '해당 카테고리가 존재하지 않습니다.'

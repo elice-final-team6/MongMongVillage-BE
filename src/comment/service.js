@@ -100,12 +100,6 @@ exports.getUserComments = async (userId) => {
     try {
         const user = await User.findById({ _id: userId })
                                 .select('_id nickname image');
-        if (!user) {
-            return {
-                status: 404,
-                message: "존재하지 않는 사용자입니다."
-            } 
-        }
         const comments = await Comment.find({ user_id: userId })
                                 .select('_id board_id content createdAt updatedAt');
         if (!comments.length) {

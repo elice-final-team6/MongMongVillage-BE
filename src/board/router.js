@@ -78,9 +78,9 @@ router.get('/category/:name', async (req, res, next) => {
         const perPage = 4;
         const category = req.params.name;
         const categoryBoardsResult = await boardService.getCategoryBoards(category, currentPage, perPage);
-        if (categoryBoardsResult.status === 404) 
-            return res.status(404).send(categoryBoardsResult.message);
-        return res.status(200).json(categoryBoardsResult)
+        if (categoryBoardsResult.message) 
+            return res.status(400).send(categoryBoardsResult.message);
+        return res.status(200).json(categoryBoardsResult);
     } catch (error) {
         console.error(error);
         next(error);
@@ -145,7 +145,7 @@ router.get('/:id', async (req, res, next) => {
         const boardDetailResult = await boardService.getDetailBoard(boardId);
 
         if (boardDetailResult.status === 400) {
-            return res.status(400).json(boardDetailResult);
+            return res.status(400).send(boardDetailResult.message);
         }
         return res.status(200).json(boardDetailResult);
     } catch (error) {
