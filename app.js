@@ -7,6 +7,7 @@ const connect = require('./src/db');
 dotenv.config();
 const userRouter = require("./src/user/router");
 const boardRouter = require("./src/board/router");
+const commentRouter = require("./src/comment/router");
 
 const app = express();
 connect();
@@ -25,6 +26,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use("/api/users", userRouter);
 app.use("/api/boards", boardRouter);
+app.use("/api/comments", commentRouter);
 
 app.get("/api", (req, res) => {
   res.send("test");
