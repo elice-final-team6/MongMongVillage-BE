@@ -1,36 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { S3Client } = require('@aws-sdk/client-s3');
-const multer = require('multer');
-const multerS3 = require('multer-s3');
-const path = require('path');
 
+const JwtMiddleware = require("../middleware/jwt-handler");
+const { upload } = require('../utils/s3-multer');
 const boardService = require('./service');
 
-const s3 = new S3Client({
-    region : 'ap-northeast-2',
-    credentials : {
-        accessKeyId : process.env.S3_ACCESS_KEY_ID,
-        secretAccessKey : process.env.S3_SECRET_ACCESS_KEY,
-    }
-});
-  
-const upload = multer({
-    storage: multerS3({
-    s3: s3,
-    bucket: 'mongmongvillagebucket',
-        key: function (req, file, cb) {
-        cb(null, `board/${Date.now()}_${path.basename(file.originalname)}`) //업로드시 파일명 변경가능
-    }
-    }),
-    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
-});
-
-// 로그인 검사
-router.post('/', upload.array('images'), async (req, res, next) => {
+router.post('/', JwtMiddleware.checkToken, upload.array('images'), async (req, res, next) => {
     try {
+       const userId = req.token.userId;
        const { title, content, animalType, category } = req.body;
-       const userId = '655ac300ee052627917debf7';
        let imageUrl = [];
        if (req.files.length > 0) {
          imageUrl = req.files.map((file) => file.location);
@@ -44,14 +22,34 @@ router.post('/', upload.array('images'), async (req, res, next) => {
     }
 });
 
-// 로그인 검사
-router.delete('/:id', async (req, res, next) => {
+router.patch('/:id', JwtMiddleware.checkToken, upload.array('images'), async (req, res, next) => {
     try {
-        const userId = '655ac300ee052627917debf7';
+        const userId = req.token.userId;
+        const boardId = req.params.id;
+        const { title, content, animalType, category } = req.body;
+        let imageUrl = [];
+        if (req.files.length > 0) {
+            imageUrl = req.files.map((file) => file.location);
+            console.log(imageUrl);
+        }
+        const updateBoardResult = await boardService.updateBoard({ boardId, userId, title, content, animalType, category, imageUrl })
+        if (updateBoardResult.message)
+            return res.status(404).send(updateBoardResult.message);
+        else
+            return res.status(200).send(updateBoardResult);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+router.delete('/:id', JwtMiddleware.checkToken, async (req, res, next) => {
+    try {
+        const userId = req.token.userId;
         const boardId = req.params.id;
         const deleteBoardResult = await boardService.deleteBoard(userId, boardId);
         if (deleteBoardResult.status === 200)
-            return res.status(200).json(deleteBoardResult);
+            return res.status(200).send(deleteBoardResult.message);
         else
             return res.status(404).send(deleteBoardResult.message);
     } catch (error) {
@@ -99,11 +97,26 @@ router.get('/best', async (req, res, next) => {
     }
 });
 
-// 좋아요를 눌렀다면 좋아요 취소, 아니면 좋아요 생성
-// 로그인 검사
-router.put('/:id/liked', async (req, res, next) => {
+router.get('/search', async (req, res, next) => {
     try {
-        const userId = '655ac300ee052627917debf7';
+        const currentPage = req.query.currentPage || 1;
+        const perPage = 4;
+        const content = req.query.content;
+        const searchBoardsResult = await boardService.getSearchBoards(content, currentPage, perPage);
+        if (searchBoardsResult.message) {
+            return res.status(400).send(searchBoardsResult.message);
+        }
+        return res.status(200).json(searchBoardsResult);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+})
+
+// 좋아요를 눌렀다면 좋아요 취소, 아니면 좋아요 생성
+router.put('/:id/liked', JwtMiddleware.checkToken, async (req, res, next) => {
+    try {
+        const userId = req.token.userId;
         const boardId = req.params.id;
         const isLiked = await boardService.getLiked(boardId, userId);
         let likedBoardResult;
@@ -141,11 +154,9 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// 로그인 검사
-router.get('/mypage/user', async (req, res, next) => {
+router.get('/mypage/user', JwtMiddleware.checkToken, async (req, res, next) => {
     try {
-        // 로그인 했는지 검사
-        const userId = '655ac300ee052627917debf7';
+        const userId = req.token.userId;
         const userBoardsResult = await boardService.getUserBoards(userId);
         return res.status(200).json(userBoardsResult);
     } catch (error) {
@@ -155,9 +166,9 @@ router.get('/mypage/user', async (req, res, next) => {
 });
 
 // 회원이 좋아요 누른 게시글 목록
-router.get('/mypage/user/liked', async (req, res, next) => {
+router.get('/mypage/user/liked', JwtMiddleware.checkToken, async (req, res, next) => {
     try {
-        const userId = '655ac300ee052627917debf7';
+        const userId = req.token.userId;
         const userLikedBoardResult = await boardService.getUserLikedBoards(userId);
         if (userLikedBoardResult.message) {
             res.status(404).send(userLikedBoardResult.message);

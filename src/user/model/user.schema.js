@@ -1,3 +1,4 @@
+const Joi = require("joi");
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 const {
@@ -25,4 +26,15 @@ const userSchema = new Schema({
   },
 });
 
-module.exports = mongoose.model('User', userSchema);
+// Joi 스키마 정의
+const userJoiSchema = Joi.object({
+  email: Joi.string().email().required(),
+  nickname: Joi.string().required(),
+  password: Joi.string().min(8).required(),
+  role: Joi.string().default("USER"),
+});
+
+module.exports = {
+  User: mongoose.model("User", userSchema),
+  JoiSchema: userJoiSchema,
+};

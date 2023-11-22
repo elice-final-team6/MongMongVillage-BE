@@ -18,7 +18,7 @@ exports.createBoard = async ({ userId, title, content, animalType, category, ima
         console.log(board);
         return {
             status: 201,
-            board_id: board['_id'],
+            board_id: board._id,
             message: '게시글이 성공적으로 작성되었습니다.'
         }
     } catch (error) {
@@ -26,8 +26,33 @@ exports.createBoard = async ({ userId, title, content, animalType, category, ima
     }
 }
 
-exports.updateBoard = async () => {
-
+exports.updateBoard = async ({ boardId, userId, title, content, animalType, category, imageUrl }) => {
+    try {
+        const board = await Board.findOneAndUpdate(
+            { _id: boardId, user_id: userId },
+            {
+                title: title,
+                content: content,
+                images: imageUrl,
+                animal_type: animalType,
+                category: category,
+            },
+            { new: true }
+        );
+        if (!board) {
+            return {
+                status: 400,
+                message: '게시글 수정 실패'
+            }
+        }
+        console.log(board);
+        return {
+            status: 200,
+            board,
+        }
+    } catch (error) {
+        throw error;
+    }
 }
 
 exports.deleteBoard = async (userId, boardId) => {
@@ -108,6 +133,35 @@ exports.getBestBoards = async () => {
         return {
             status: 200,
             boards,
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+exports.getSearchBoards = async(content, currentPage, perPage) => {
+    try {
+        const options = [
+            { title: new RegExp(content) },
+            { content: new RegExp(content) },
+        ];
+        const total_number_of_boards = await Board.find({ $or: options }).countDocuments({});
+        const boards = await Board.find({ $or: options })
+                        .sort({createdAt: -1})
+                        .skip((currentPage - 1) * perPage)
+                        .limit(perPage)
+                        .populate({ path: 'user_id', select: '_id image nickname' });
+        if (!boards) {
+            return {
+                status: 400,
+                message: '검색 결과가 없습니다.'
+            }
+        }
+        console.log(total_number_of_boards, boards);
+        return {
+            status: 200,
+            total_number_of_boards,
+            boards
         }
     } catch (error) {
         throw error;
