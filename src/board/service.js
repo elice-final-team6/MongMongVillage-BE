@@ -139,6 +139,35 @@ exports.getBestBoards = async () => {
     }
 }
 
+exports.getSearchBoards = async(content, currentPage, perPage) => {
+    try {
+        const options = [
+            { title: new RegExp(content) },
+            { content: new RegExp(content) },
+        ];
+        const total_number_of_boards = await Board.find({ $or: options }).countDocuments({});
+        const boards = await Board.find({ $or: options })
+                        .sort({createdAt: -1})
+                        .skip((currentPage - 1) * perPage)
+                        .limit(perPage)
+                        .populate({ path: 'user_id', select: '_id image nickname' });
+        if (!boards) {
+            return {
+                status: 400,
+                message: '검색 결과가 없습니다.'
+            }
+        }
+        console.log(total_number_of_boards, boards);
+        return {
+            status: 200,
+            total_number_of_boards,
+            boards
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
 exports.getUserBoards = async (userId) => {
     try {
         const board = await Board.find({ user_id: userId });

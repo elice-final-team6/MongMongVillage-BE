@@ -97,6 +97,22 @@ router.get('/best', async (req, res, next) => {
     }
 });
 
+router.get('/search', async (req, res, next) => {
+    try {
+        const currentPage = req.query.currentPage || 1;
+        const perPage = 4;
+        const content = req.query.content;
+        const searchBoardsResult = await boardService.getSearchBoards(content, currentPage, perPage);
+        if (searchBoardsResult.message) {
+            return res.status(400).send(searchBoardsResult.message);
+        }
+        return res.status(200).json(searchBoardsResult);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+})
+
 // 좋아요를 눌렀다면 좋아요 취소, 아니면 좋아요 생성
 router.put('/:id/liked', JwtMiddleware.checkToken, async (req, res, next) => {
     try {
