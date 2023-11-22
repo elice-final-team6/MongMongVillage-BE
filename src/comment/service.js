@@ -30,7 +30,7 @@ exports.createComment = async ({ userId, boardId, content }) => {
     }
 }
 
-exports.updateComment = async (boardId, commentId, content) => {
+exports.updateComment = async ({ boardId, userId, commentId, content }) => {
     try {
         const board = await Board.findById({ _id: boardId });
         if (!board) {
@@ -39,12 +39,18 @@ exports.updateComment = async (boardId, commentId, content) => {
                 message: '존재하지 않는 게시글입니다.'
             }
         }
-        const comment = await Comment.findByIdAndUpdate(
-                                { _id: commentId }, 
+        const comment = await Comment.findOneAndUpdate(
+                                { _id: commentId, user_id: userId, board_id: board._id }, 
                                 { content: content }, 
                                 { new: true })
                                 .select('_id user_id content createdAt updatedAt');
         console.log(comment);
+        if (!comment){
+            return {
+                status: 400,
+                message:'댓글 수정 실패'
+            }
+        }
         return {
             status: 200,
             board_id: boardId,
@@ -55,7 +61,7 @@ exports.updateComment = async (boardId, commentId, content) => {
     }
 }
 
-exports.deleteComment = async (boardId, commentId) => {
+exports.deleteComment = async ({ boardId, commentId, userId }) => {
     try {
         const board = await Board.findById({ _id: boardId });
         if (!board) {
@@ -64,7 +70,7 @@ exports.deleteComment = async (boardId, commentId) => {
                 message: "존재하지 않는 게시글입니다."
             }
         }
-        const comment = await Comment.findByIdAndDelete({ _id: commentId });
+        const comment = await Comment.findOneAndDelete({ _id: commentId, user_id: userId });
         if (!comment) {
             return {
                 status: 400,
