@@ -18,7 +18,7 @@ exports.createBoard = async ({ userId, title, content, animalType, category, ima
         console.log(board);
         return {
             status: 201,
-            board_id: board['_id'],
+            board_id: board._id,
             message: '게시글이 성공적으로 작성되었습니다.'
         }
     } catch (error) {
@@ -26,8 +26,33 @@ exports.createBoard = async ({ userId, title, content, animalType, category, ima
     }
 }
 
-exports.updateBoard = async () => {
-
+exports.updateBoard = async ({ boardId, userId, title, content, animalType, category, imageUrl }) => {
+    try {
+        const board = await Board.findOneAndUpdate(
+            { _id: boardId, user_id: userId },
+            {
+                title: title,
+                content: content,
+                images: imageUrl,
+                animal_type: animalType,
+                category: category,
+            },
+            { new: true }
+        );
+        if (!board) {
+            return {
+                status: 400,
+                message: '게시글 수정 실패'
+            }
+        }
+        console.log(board);
+        return {
+            status: 200,
+            board,
+        }
+    } catch (error) {
+        throw error;
+    }
 }
 
 exports.deleteBoard = async (userId, boardId) => {
