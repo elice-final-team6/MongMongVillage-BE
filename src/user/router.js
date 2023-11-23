@@ -153,7 +153,7 @@ router.get(
 );
 
 // 회원 정보 수정
-router.put("/:userId", JwtMiddleware.checkToken, async (req, res) => {
+router.patch("/:userId", JwtMiddleware.checkToken, async (req, res) => {
   try {
     const userId = req.token.userId;
 
