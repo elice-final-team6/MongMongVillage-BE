@@ -62,9 +62,13 @@ router.delete('/:id', JwtMiddleware.checkToken, async (req, res, next) => {
 // 게시글 조회 + 페이지네이션
 router.get('/', async (req, res, next) => {
     try {
+        let sortBy;
+        if (!req.query.sortBy) sortBy = '-createdAt';
+        else if (req.query.sortBy === 'likes') sortBy = '-like_count';
+        else return res.status(400).send('잘못된 요청입니다.');
         const currentPage = req.query.currentPage || 1;
         const perPage = 4;
-        const allBoardsResult = await boardService.getAllBoards(currentPage, perPage);
+        const allBoardsResult = await boardService.getAllBoards(currentPage, perPage, sortBy);
         return res.status(200).json(allBoardsResult);
     } catch (error) {
         console.error(error);
@@ -74,10 +78,20 @@ router.get('/', async (req, res, next) => {
 
 router.get('/category/:name', async (req, res, next) => {
     try {
+        let sortBy;
+        if (!req.query.sortBy) sortBy = '-createdAt';
+        else if (req.query.sortBy === 'likes') sortBy = '-like_count';
+        else return res.status(400).send('잘못된 요청입니다.');
+
         const currentPage = req.query.currentPage || 1;
         const perPage = 4;
         const category = req.params.name;
-        const categoryBoardsResult = await boardService.getCategoryBoards(category, currentPage, perPage);
+        if (category !== 'info' 
+            && category !== 'general' 
+            && category !== 'question'
+        ) return res.status(400).send('해당 카테고리가 존재하지 않습니다.');
+
+        const categoryBoardsResult = await boardService.getCategoryBoards({ category, currentPage, perPage, sortBy });
         if (categoryBoardsResult.message) 
             return res.status(400).send(categoryBoardsResult.message);
         return res.status(200).json(categoryBoardsResult);
