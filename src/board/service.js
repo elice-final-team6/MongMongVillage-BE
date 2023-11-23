@@ -73,12 +73,12 @@ exports.deleteBoard = async (userId, boardId) => {
     }
 }
 
-exports.getAllBoards = async (currentPage, perPage) => {
+exports.getAllBoards = async (currentPage, perPage, sortBy) => {
   try {
     const total_number_of_boards = await Board.countDocuments({});
     const boards = await Board
                 .find({})
-                .sort({createdAt: -1})
+                .sort(sortBy)
                 .skip((currentPage - 1) * perPage)
                 .limit(perPage)
                 .populate({ path: 'user_id', select: '_id image nickname' });
@@ -98,18 +98,12 @@ exports.getAllBoards = async (currentPage, perPage) => {
   }
 }
 
-exports.getCategoryBoards = async (category, currentPage, perPage) => {
+exports.getCategoryBoards = async ({ category, currentPage, perPage, sortBy }) => {
     try {
-        if (category !== 'info' && category !== 'general' && category !== 'question') {
-            return {
-                status: 400,
-                message: '해당 카테고리가 존재하지 않습니다.'
-            }
-        }
         const total_number_of_boards = await Board.countDocuments({ category: category });
         const boards = await Board 
                     .find({ category: category })
-                    .sort({ createdAt: -1 })
+                    .sort(sortBy)
                     .skip((currentPage - 1) * perPage)
                     .limit(perPage);
         if (!boards.length) {
