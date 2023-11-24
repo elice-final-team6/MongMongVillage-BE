@@ -1,15 +1,19 @@
 const express = require('express');
 const router = express.Router();
 
+const { boardJoiSchema } = require('./model/board.schema');
 const JwtMiddleware = require("../middleware/jwt-handler");
 const JWT = require("../utils/jwt");
-const { upload } = require('../utils/s3-multer');
+const { imageUploadConfig } = require('../utils/s3-multer');
+const boardsUpload = imageUploadConfig('board');
 const boardService = require('./service');
 
-router.post('/', JwtMiddleware.checkToken, upload.array('images'), async (req, res, next) => {
+router.post('/', JwtMiddleware.checkToken, boardsUpload.array('images'), async (req, res, next) => {
     try {
        const userId = req.token.userId;
        const { title, content, animalType, category } = req.body;
+       await boardJoiSchema.validateAsync({ title, content });
+
        let imageUrl = [];
        if (req.files.length > 0) {
          imageUrl = req.files.map((file) => file.location);
@@ -23,11 +27,13 @@ router.post('/', JwtMiddleware.checkToken, upload.array('images'), async (req, r
     }
 });
 
-router.patch('/:id', JwtMiddleware.checkToken, upload.array('images'), async (req, res, next) => {
+router.patch('/:id', JwtMiddleware.checkToken, boardsUpload.array('images'), async (req, res, next) => {
     try {
         const userId = req.token.userId;
         const boardId = req.params.id;
         const { title, content, animalType, category } = req.body;
+        await boardJoiSchema.validateAsync({ title, content });
+
         let imageUrl = [];
         if (req.files.length > 0) {
             imageUrl = req.files.map((file) => file.location);

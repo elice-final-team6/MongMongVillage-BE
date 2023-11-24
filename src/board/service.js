@@ -1,4 +1,4 @@
-const Board = require('./model/board.schema');
+const { Board } = require('./model/board.schema');
 const User = require('../user/model/user.schema');
 const Like = require('../board/model/like.schema');
 const Comment = require('../comment/model/comment.schema');
