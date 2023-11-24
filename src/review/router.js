@@ -68,10 +68,8 @@ async function uploadImageToServer(imageBuffer) {
 // 리뷰 리스트 조회
 router.get(
   "/",
-  JwtMiddleware.checkToken,
   asyncHandler(async (req, res) => {
     try {
-      // const userId = req.token.userId;
       const reviewId = req.params.reviewId;
 
       const reviews = await ReviewService.getAllReviews();
@@ -95,7 +93,6 @@ router.get(
 // 특정 리뷰 조회
 router.get(
   "/:reviewId",
-  JwtMiddleware.checkToken,
   asyncHandler(async (req, res) => {
     try {
       const reviewId = req.params.reviewId;
