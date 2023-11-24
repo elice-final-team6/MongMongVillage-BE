@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const Joi = require('joi');
+
 const { Schema } = mongoose;
 const { Types: { ObjectId } } = Schema;
 
@@ -19,4 +21,11 @@ const commentSchema = new Schema({
     }
 }, {timestamps: true});
 
-module.exports = mongoose.model('Comment', commentSchema);
+const commentJoiSchema = Joi.object({
+    content: Joi.string().required(),
+});
+
+module.exports = {
+    Comment: mongoose.model('Comment', commentSchema),
+    commentJoiSchema,
+};

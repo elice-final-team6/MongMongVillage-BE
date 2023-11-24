@@ -1,7 +1,7 @@
-const Board = require('../board/model/board.schema');
+const { Board } = require('../board/model/board.schema');
 const { User } = require('../user/model/user.schema');
 const Like = require('../board/model/like.schema');
-const Comment = require('./model/comment.schema');
+const { Comment } = require('./model/comment.schema');
 
 exports.createComment = async ({ userId, boardId, content }) => {
     try {
