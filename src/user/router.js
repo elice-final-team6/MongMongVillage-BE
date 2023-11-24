@@ -7,6 +7,18 @@ const JWT = require("../utils/jwt");
 const mongoose = require("mongoose");
 const JwtMiddleware = require("../middleware/jwt-handler");
 const auth = require("../middleware/auth");
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // 이미지를 저장할 디렉토리 설정
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname); // 파일명 설정 (현재 시간 + 원본 파일명)
+  },
+});
+
+const upload = multer({ storage: storage });
 
 // 회원가입
 router.post(
@@ -85,33 +97,10 @@ router.post(
     res.status(200).json({
       status: 200,
       message: "로그인 성공",
-      data: token,
+      data: { token, userId: user._id },
     });
   })
 );
-
-// // 로그아웃
-// router.get(
-//   "/logout",
-//   auth,
-//   asyncHandler(async (req, res) => {
-//     try {
-//       await User.findByIdAndUpdate(req.user._id, { token: "" });
-
-//       res.status(200).json({
-//         status: 200,
-//         message: "로그아웃 성공",
-//       });
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({
-//         status: 500,
-//         message: "내부 서버 오류",
-//         error: "로그아웃 중에 오류가 발생했습니다.",
-//       });
-//     }
-//   })
-// );
 
 // 회원 정보 조회
 router.get(
@@ -140,7 +129,7 @@ router.get(
         res.status(200).json({
           status: 200,
           message: "조회 성공",
-          data: user,
+          data: { ...user.toObject(), password: undefined },
         });
       }
     } catch (error) {
@@ -153,28 +142,38 @@ router.get(
 );
 
 // 회원 정보 수정
-router.patch("/:userId", JwtMiddleware.checkToken, async (req, res) => {
-  try {
-    const userId = req.token.userId;
+router.patch(
+  "/:userId",
+  JwtMiddleware.checkToken,
+  upload.single("profileImage"),
+  async (req, res) => {
+    try {
+      const userId = req.token.userId;
 
-    const updatedUserInfo = req.body;
+      const updatedUserInfo = req.body;
 
-    const updatedUser = await userService.updateUser(userId, updatedUserInfo);
+      // 프로필 이미지 업로드
+      if (req.file) {
+        updatedUserInfo.profilePicture = req.file.filename;
+      }
 
-    res.status(200).json({
-      status: 200,
-      message: "사용자 업데이트 성공",
-      data: updatedUser,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      status: 500,
-      message: "내부 서버 오류",
-      error: "사용자 업데이트 중에 오류가 발생했습니다.",
-    });
+      const updatedUser = await userService.updateUser(userId, updatedUserInfo);
+
+      res.status(200).json({
+        status: 200,
+        message: "사용자 업데이트 성공",
+        data: updatedUser,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: 500,
+        message: "내부 서버 오류",
+        error: "사용자 업데이트 중에 오류가 발생했습니다.",
+      });
+    }
   }
-});
+);
 
 // 회원탈퇴
 router.delete(

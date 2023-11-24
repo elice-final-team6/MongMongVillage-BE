@@ -7,8 +7,31 @@ class UserService {
     if (!userInfo.password) {
       throw new Error("Password is required.");
     }
+
+    const existingEmail = await User.findOne({ email: userInfo.email });
+    const existingNickname = await User.findOne({
+      nickname: userInfo.nickname,
+    });
+
+    if (existingEmail) {
+      throw {
+        status: 400,
+        message: "Duplicate email",
+        error: "This email address is already registered.",
+      };
+    }
+
+    if (existingNickname) {
+      throw {
+        status: 400,
+        message: "Duplicate nickname",
+        error: "This nickname is already taken.",
+      };
+    }
+
     const hashedPassword = await bcrypt.hash(userInfo.password, 10);
     userInfo.password = hashedPassword;
+
     const user = await User.create(userInfo);
     return user;
   }
