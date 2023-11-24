@@ -24,6 +24,12 @@ const userSchema = new Schema({
     type: String,
     default: "USER",
   },
+  profilePicture: {
+    type: String,
+  },
+  introduction: {
+    type: String,
+  },
 });
 
 // Joi 스키마 정의

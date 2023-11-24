@@ -30,30 +30,70 @@ class ReviewService {
     }
   }
 
-  // 리뷰 수정 - 구현 안됨
-  static async updateReview(reviewId, updatedData) {
+  // 특정 리뷰 조회
+  static async getReviewById(reviewId) {
+    try {
+      const review = await Review.findById(reviewId);
+      return review;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // 리뷰 수정
+  static async updateReview(userId, reviewId, updatedData) {
     try {
       const isValidObjectId = mongoose.isValidObjectId(reviewId);
 
       if (!isValidObjectId) {
-        throw new Error("Invalid ObjectId");
+        throw new Error("Invalid Review ObjectId");
       }
 
+      // 리뷰가 존재하는지 확인
+      const existingReview = await Review.findOne({
+        _id: reviewId,
+        user_id: userId,
+      });
+
+      if (!existingReview) {
+        throw new Error("Review not found or user does not have permission");
+      }
+
+      // 리뷰 업데이트
       const updatedReview = await Review.findByIdAndUpdate(
         reviewId,
         updatedData,
         { new: true }
       );
+
       return updatedReview;
     } catch (error) {
       throw error;
     }
   }
 
-  // 리뷰 삭제 - 구현 안됨
-  static async deleteReview(reviewId) {
+  // 리뷰 삭제
+  static async deleteReview(userId, reviewId) {
     try {
+      const isValidObjectId = mongoose.isValidObjectId(reviewId);
+
+      if (!isValidObjectId) {
+        throw new Error("Invalid Review ObjectId");
+      }
+
+      // 리뷰가 존재하는지 확인
+      const existingReview = await Review.findOne({
+        _id: reviewId,
+        user_id: userId,
+      });
+
+      if (!existingReview) {
+        throw new Error("Review not found or user does not have permission");
+      }
+
+      // 리뷰 삭제
       const deletedReview = await Review.findByIdAndDelete(reviewId);
+
       return deletedReview;
     } catch (error) {
       throw error;

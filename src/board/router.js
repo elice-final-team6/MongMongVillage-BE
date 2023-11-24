@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const JwtMiddleware = require("../middleware/jwt-handler");
+const JWT = require("../utils/jwt");
 const { upload } = require('../utils/s3-multer');
 const boardService = require('./service');
 
@@ -153,12 +154,34 @@ router.put('/:id/liked', JwtMiddleware.checkToken, async (req, res, next) => {
     }
 });
 
+// 게시글 상세 조회
+router.get('/:id', async (req, res, next) => {
+    res.locals.boardId = req.params.id;
+    if (req.header("Authorization")) next();
+    else next('route');
+}, async (req, res, next) => { // 로그인 한 유저라면 게시글 좋아요 눌렀는지 확인할 수 있는 isLiked 추가
+    try {
+        req.token = JWT.verifyToken(req.header("Authorization").split(" ")[1]);
+        if (req.token.userId) {
+            const isLiked = await boardService.getLiked(res.locals.boardId, req.token.userId);
+            const boardDetailResult = await boardService.getDetailBoard(res.locals.boardId);
+            if (boardDetailResult.message) {
+                return res.status(400).send(boardDetailResult.message);
+            }
+            return res.status(200).json({ isLiked, ...boardDetailResult });
+        }
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+// 로그인 하지 않은 유저가 게시글 조회할 때
 router.get('/:id', async (req, res, next) => {
     try {
-        const boardId = req.params.id;
-        const boardDetailResult = await boardService.getDetailBoard(boardId);
+        const boardDetailResult = await boardService.getDetailBoard(res.locals.boardId);
 
-        if (boardDetailResult.status === 400) {
+        if (boardDetailResult.message) {
             return res.status(400).send(boardDetailResult.message);
         }
         return res.status(200).json(boardDetailResult);
