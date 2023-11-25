@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const Joi = require('joi');
+
 const { Schema } = mongoose;
 const { Types: { ObjectId } } = Schema;
 
@@ -35,4 +37,12 @@ const boardSchema = new Schema({
     },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Board', boardSchema);
+const boardJoiSchema = Joi.object({
+    title: Joi.string().required(),
+    content: Joi.string().required(),
+});
+
+module.exports = {
+    Board: mongoose.model('Board', boardSchema),
+    boardJoiSchema,
+};

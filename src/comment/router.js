@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 
 const JwtMiddleware = require("../middleware/jwt-handler");
+const { commentJoiSchema } = require('./model/comment.schema');
 const commentService = require('./service');
 
 router.post('/boards/:id', JwtMiddleware.checkToken, async (req, res, next) => {
     try {
         const boardId = req.params.id;
         const userId = req.token.userId;
-        const content = req.body.content;
+        const { content } = await commentJoiSchema.validateAsync(req.body);
         const createCommentResult = await commentService.createComment({ userId, boardId, content });
         console.log(createCommentResult);
         if (createCommentResult.message)
@@ -22,10 +23,9 @@ router.post('/boards/:id', JwtMiddleware.checkToken, async (req, res, next) => {
 
 router.patch('/:id/boards/:boardId', JwtMiddleware.checkToken, async (req, res, next) => {
     try {
-        const commentId = req.params.id;
+        const { id:commentId, boardId } = req.params;
         const userId = req.token.userId;
-        const boardId = req.params.boardId;
-        const content = req.body.content;
+        const { content } = await commentJoiSchema.validateAsync(req.body);
         const updateCommentResult = await commentService.updateComment({ boardId, userId, commentId, content });
         if (updateCommentResult.message) {
             return res.status(updateCommentResult.status).send(updateCommentResult.message);
@@ -39,8 +39,7 @@ router.patch('/:id/boards/:boardId', JwtMiddleware.checkToken, async (req, res, 
 
 router.delete('/:id/boards/:boardId', JwtMiddleware.checkToken, async (req, res, next) => {
     try {
-        const commentId = req.params.id;
-        const boardId = req.params.boardId;
+        const { id:commentId, boardId } = req.params;
         const userId = req.token.userId;
         const deleteCommentResult = await commentService.deleteComment({ boardId, commentId, userId });
         if (deleteCommentResult.message) {

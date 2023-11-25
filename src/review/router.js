@@ -1,46 +1,33 @@
+// review.router.js
+
 const express = require("express");
 const asyncHandler = require("../utils/async-handler");
 const { Review } = require("./model/review.schema");
 const ReviewService = require("./service");
 const JwtMiddleware = require("../middleware/jwt-handler");
-const multer = require("multer");
 const router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // 이미지를 저장할 디렉토리 설정
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname); // 파일명 설정 (현재 시간 + 원본 파일명)
-  },
-});
-
-const upload = multer({ storage: storage });
+const { imageUploadConfig } = require("../utils/s3-multer");
+const reviewsUpload = imageUploadConfig("review");
 
 // 리뷰 작성
 router.post(
   "/",
   JwtMiddleware.checkToken,
-  upload.single("image"),
-  asyncHandler(async (req, res) => {
+  reviewsUpload.array("images"),
+  async (req, res, next) => {
     try {
       const { title, content, rating } = req.body;
       const userId = req.token.userId;
-      const reviewId = req.params.reviewId;
 
-      // 이미지 데이터
-      const imageBuffer = req.file.buffer;
-
-      // 이미지를 업로드하고 URL을 받아옴
-      const uploadedURL = await uploadImageToServer(imageBuffer);
+      const imageUrl = req.files.map((file) => file.location);
 
       const createReview = await ReviewService.createReview({
         user_id: userId,
-        review_id: reviewId,
         title,
         content,
         rating,
-        images: [uploadedURL], // 이미지 경로를 배열에 추가
+        images: imageUrl,
       });
 
       res.status(201).json({
@@ -56,14 +43,8 @@ router.post(
         error: error.message,
       });
     }
-  })
+  }
 );
-
-// 이미지 업로드 함수
-async function uploadImageToServer(imageBuffer) {
-  // 이미지 받아와서 반환해줌
-  return "uploads/" + Date.now() + "-uploaded.jpg";
-}
 
 // 리뷰 리스트 조회
 router.get(
