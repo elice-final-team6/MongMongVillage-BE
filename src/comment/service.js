@@ -99,7 +99,7 @@ exports.deleteComment = async ({ boardId, commentId, userId }) => {
 exports.getUserComments = async (userId) => {
     try {
         const user = await User.findById({ _id: userId })
-                                .select('_id nickname image');
+                                .select('_id nickname profilePicture');
         const comments = await Comment.find({ user_id: userId })
                                 .select('_id board_id content createdAt updatedAt');
         if (!comments.length) {
