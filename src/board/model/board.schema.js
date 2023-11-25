@@ -38,8 +38,8 @@ const boardSchema = new Schema({
 }, { timestamps: true });
 
 const boardJoiSchema = Joi.object({
-    title: Joi.string().required(),
-    content: Joi.string().required(),
+    title: Joi.string().max(50).required(),
+    content: Joi.string().max(1000).required(),
 });
 
 module.exports = {
