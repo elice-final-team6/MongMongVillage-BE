@@ -80,7 +80,7 @@ exports.getAllBoards = async (currentPage, perPage, sortBy) => {
                 .sort(sortBy)
                 .skip((currentPage - 1) * perPage)
                 .limit(perPage)
-                .populate({ path: 'user_id', select: '_id image nickname' });
+                .populate({ path: 'user_id', select: '_id profilePicture nickname' });
     if (!boards.length) {
         return {
             status: 404,
@@ -149,7 +149,7 @@ exports.getSearchBoards = async(content, currentPage, perPage) => {
                         .sort({createdAt: -1})
                         .skip((currentPage - 1) * perPage)
                         .limit(perPage)
-                        .populate({ path: 'user_id', select: '_id image nickname' });
+                        .populate({ path: 'user_id', select: '_id profilePicture nickname' });
         if (!boards.length) {
             return {
                 status: 400,
@@ -210,10 +210,10 @@ exports.getUserLikedBoards = async (userId) => {
 exports.getDetailBoard = async (boardId) => { 
     try {
         const board = await Board.findOne({ _id: boardId })
-            .populate({ path: 'user_id', select: '_id nickname image' });
+            .populate({ path: 'user_id', select: '_id nickname profilePicture' });
         const comments = await Comment.find({ board_id: boardId })
             .select('_id user_id content createdAt updatedAt')
-            .populate({ path: 'user_id', select: '_id image nickname' });
+            .populate({ path: 'user_id', select: '_id profilePicture nickname' });
 
         console.log('게시글: ', board);
         console.log('댓글: ', comments);
