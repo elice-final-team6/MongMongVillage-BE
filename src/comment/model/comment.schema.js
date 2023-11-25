@@ -22,7 +22,7 @@ const commentSchema = new Schema({
 }, {timestamps: true});
 
 const commentJoiSchema = Joi.object({
-    content: Joi.string().required(),
+    content: Joi.string().max(200).required(),
 });
 
 module.exports = {
