@@ -8,6 +8,7 @@ dotenv.config();
 const userRouter = require("./src/user/router");
 const boardRouter = require("./src/board/router");
 const commentRouter = require("./src/comment/router");
+const cafeRouter = require("./src/cafe/router")
 const reviewRouter = require("./src/review/router");
 
 const app = express();
@@ -27,6 +28,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/api/users", userRouter);
 app.use("/api/boards", boardRouter);
 app.use("/api/comments", commentRouter);
+app.use("/api/cafes", cafeRouter);
 app.use("/api/reviews", reviewRouter);
 
 app.get("/api", (req, res) => {
