@@ -206,4 +206,9 @@ router.delete(
   })
 );
 
+// 토큰 유효성 검사
+router.get("/check-token", JwtMiddleware.checkToken, (req, res) => {
+  res.status(200).json({ valid: true, message: "토큰이 유효합니다." });
+});
+
 module.exports = router;
