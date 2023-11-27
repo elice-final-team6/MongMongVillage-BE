@@ -7,18 +7,8 @@ const JWT = require("../utils/jwt");
 const mongoose = require("mongoose");
 const JwtMiddleware = require("../middleware/jwt-handler");
 const auth = require("../middleware/auth");
-const multer = require("multer");
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // 이미지를 저장할 디렉토리 설정
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname); // 파일명 설정 (현재 시간 + 원본 파일명)
-  },
-});
-
-const upload = multer({ storage: storage });
+const { imageUploadConfig } = require("../utils/s3-multer");
+const profileUpload = imageUploadConfig("user");
 
 // 회원가입
 router.post(
@@ -34,7 +24,6 @@ router.post(
         });
       }
 
-      const user = await userService.createUser(req.body);
       // 회원가입 성공
       res.status(201).json({
         status: 201,
@@ -145,16 +134,15 @@ router.get(
 router.patch(
   "/:userId",
   JwtMiddleware.checkToken,
-  upload.single("profileImage"),
+  profileUpload.single("image"),
   async (req, res) => {
     try {
       const userId = req.token.userId;
 
       const updatedUserInfo = req.body;
 
-      // 프로필 이미지 업로드
       if (req.file) {
-        updatedUserInfo.profilePicture = req.file.filename;
+        updatedUserInfo.profilePicture = req.file.location;
       }
 
       const updatedUser = await userService.updateUser(userId, updatedUserInfo);
