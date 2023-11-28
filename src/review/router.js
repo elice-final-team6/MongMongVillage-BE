@@ -1,5 +1,3 @@
-// review.router.js
-
 const express = require("express");
 const asyncHandler = require("../utils/async-handler");
 const { Review } = require("./model/review.schema");
@@ -14,20 +12,21 @@ const reviewsUpload = imageUploadConfig("review");
 router.post(
   "/",
   JwtMiddleware.checkToken,
-  reviewsUpload.array("images"),
+  reviewsUpload.array("images"), // 이미지 업로드 설정 추가
   async (req, res, next) => {
     try {
       const { title, content, rating } = req.body;
       const userId = req.token.userId;
 
-      const imageUrl = req.files.map((file) => file.location);
+      // 이미지 업로드가 진행되었을 때 이미지 경로를 저장
+      const imageUrl = req.files ? req.files.map((file) => file.location) : [];
 
       const createReview = await ReviewService.createReview({
         user_id: userId,
         title,
         content,
         rating,
-        images: imageUrl,
+        images: imageUrl, // 이미지 경로 추가
       });
 
       res.status(201).json({
@@ -52,8 +51,11 @@ router.get(
   asyncHandler(async (req, res) => {
     try {
       const reviewId = req.params.reviewId;
+      const sortBy = req.query.sortBy; // 쿼리 매개변수로 sortBy 받음
 
-      const reviews = await ReviewService.getAllReviews();
+      // 전체 리뷰 조회 메서드에 필터링 옵션 전달
+      const reviews = await ReviewService.getAllReviews({ sortBy });
+
       res.status(200).json({
         status: 200,
         message: "Success",
@@ -103,20 +105,36 @@ router.get(
 );
 
 // 리뷰 수정
-"/:reviewId",
+router.patch(
+  "/:reviewId",
   JwtMiddleware.checkToken,
+  reviewsUpload.array("images"), // 이미지 업로드 설정 추가
   asyncHandler(async (req, res) => {
     try {
       const userId = req.token.userId;
       const reviewId = req.params.reviewId;
+      const { title, content, rating } = req.body;
+
+      // 수정할 데이터를 객체에 담음
+      const updatedData = {
+        title,
+        content,
+        rating,
+      };
+
+      // 이미지가 업로드된 경우에만 업로드된 이미지 경로를 추가
+      if (req.files && req.files.length > 0) {
+        updatedData.images = req.files.map((file) => file.location);
+      }
+
       const updatedReview = await ReviewService.updateReview(
         userId,
         reviewId,
-        req.body
+        updatedData // 수정된 데이터 전달
       );
 
-      res.status(201).json({
-        status: 201,
+      res.status(200).json({
+        status: 200,
         message: "리뷰가 수정되었습니다",
         data: updatedReview,
       });
@@ -128,7 +146,8 @@ router.get(
         error: error.message,
       });
     }
-  });
+  })
+);
 
 router.delete(
   "/:reviewId",

@@ -9,6 +9,7 @@ const JwtMiddleware = require("../middleware/jwt-handler");
 const auth = require("../middleware/auth");
 const { imageUploadConfig } = require("../utils/s3-multer");
 const profileUpload = imageUploadConfig("user");
+const { User } = require("./model/user.schema");
 
 // 회원가입
 router.post(
@@ -200,5 +201,40 @@ router.delete(
 router.get("/check-token", JwtMiddleware.checkToken, (req, res) => {
   res.status(200).json({ valid: true, message: "토큰이 유효합니다." });
 });
+
+// 닉네임 중복 확인
+router.get(
+  "/check-nickname/:nickname",
+  asyncHandler(async (req, res) => {
+    const nickname = req.params.nickname;
+
+    try {
+      const existingUser = await User.findOne({ nickname });
+
+      if (existingUser) {
+        // 중복된 닉네임이 이미 존재할 경우
+        return res.status(200).json({
+          status: 200,
+          message: "닉네임 중복되었습니다(사용불가)",
+          data: { isDuplicate: true },
+        });
+      }
+
+      // 중복된 닉네임이 없을 경우
+      res.status(200).json({
+        status: 200,
+        message: "중복되지 않은 닉네임입니다(사용가능)",
+        data: { isDuplicate: false },
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: 500,
+        message: "내부 서버 오류",
+        error: "닉네임 중복 확인 중에 오류가 발생했습니다.",
+      });
+    }
+  })
+);
 
 module.exports = router;
