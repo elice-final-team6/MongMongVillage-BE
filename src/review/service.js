@@ -2,11 +2,18 @@ const mongoose = require("mongoose");
 const Review = require("./model/review.schema");
 
 class ReviewService {
-  // 리뷰 생성
-  static async createReview({ user_id, title, content, rating, images }) {
+  static async createReview({
+    user_id,
+    cafe_id,
+    title,
+    content,
+    rating,
+    images,
+  }) {
     try {
       const newReview = new Review({
         user_id,
+        cafe_id,
         title,
         content,
         rating,
@@ -20,37 +27,53 @@ class ReviewService {
     }
   }
 
-  // 전체 리뷰 조회
   static async getAllReviews({ sortBy }) {
     try {
       let sortOption = {};
 
-      // 필터링 옵션에 따라 정렬 옵션 설정
       if (sortBy === "latest") {
-        sortOption = { createdAt: -1 }; // 최신순
+        sortOption = { createdAt: -1 };
       } else if (sortBy === "popular") {
-        sortOption = { rating: -1 }; // 인기순
+        sortOption = { rating: -1 };
       }
 
-      // sort 옵션에 따라 정렬
-      const reviews = await Review.find().sort(sortOption);
+      const reviews = await Review.find().sort(sortOption).populate({
+        path: "cafe_id",
+        select: "name",
+      });
+
       return reviews;
     } catch (error) {
       throw error;
     }
   }
 
-  // 특정 리뷰 조회
-  static async getReviewById(reviewId) {
+  static async getReviewById(reviewId, userId) {
     try {
-      const review = await Review.findById(reviewId);
+      const review = await Review.findById(reviewId)
+        .populate({
+          path: "user_id",
+          select: "-password",
+        })
+        .populate({
+          path: "cafe_id",
+          select: "name", // 필요한 카페 정보 선택
+        });
+
+      if (!review) {
+        throw new Error("Review not found");
+      }
+
+      if (userId && review.user_id._id.toString() !== userId) {
+        throw new Error("User does not have permission to view this review");
+      }
+
       return review;
     } catch (error) {
       throw error;
     }
   }
 
-  // 리뷰 수정
   static async updateReview(userId, reviewId, updatedData) {
     try {
       const isValidObjectId = mongoose.isValidObjectId(reviewId);
@@ -59,7 +82,6 @@ class ReviewService {
         throw new Error("Invalid Review ObjectId");
       }
 
-      // 리뷰가 존재하는지 확인
       const existingReview = await Review.findOne({
         _id: reviewId,
         user_id: userId,
@@ -69,7 +91,6 @@ class ReviewService {
         throw new Error("Review not found or user does not have permission");
       }
 
-      // 리뷰 업데이트
       const updatedReview = await Review.findByIdAndUpdate(
         reviewId,
         updatedData,
@@ -82,7 +103,8 @@ class ReviewService {
     }
   }
 
-  // 리뷰 삭제
+  // (이전 코드 생략)
+
   static async deleteReview(userId, reviewId) {
     try {
       const isValidObjectId = mongoose.isValidObjectId(reviewId);
@@ -91,7 +113,6 @@ class ReviewService {
         throw new Error("Invalid Review ObjectId");
       }
 
-      // 리뷰가 존재하는지 확인
       const existingReview = await Review.findOne({
         _id: reviewId,
         user_id: userId,
@@ -101,7 +122,6 @@ class ReviewService {
         throw new Error("Review not found or user does not have permission");
       }
 
-      // 리뷰 삭제
       const deletedReview = await Review.findByIdAndDelete(reviewId);
 
       return deletedReview;
