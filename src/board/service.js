@@ -57,6 +57,8 @@ exports.updateBoard = async ({ boardId, userId, title, content, animalType, cate
 exports.deleteBoard = async (userId, boardId) => {
     try {
         const result = await Board.findOneAndDelete({ _id: boardId, user_id: userId });
+        const deleteCommentResult = await Comment.findOneAndDelete({ board_id: boardId });
+        const deleteLikesResult = await Like.findOneAndDelete({ board_id: boardId });
         if (!result) {
             return {
                 status: 404,
@@ -170,12 +172,6 @@ exports.getSearchBoards = async(content, currentPage, perPage) => {
 exports.getUserBoards = async (userId) => {
     try {
         const board = await Board.find({ user_id: userId });
-        if (!board.length) {
-            return {
-                status: 404,
-                message: "게시글이 존재하지 않습니다."
-            }
-        }
         return {
             status: 200,
             board,
@@ -191,13 +187,6 @@ exports.getUserLikedBoards = async (userId) => {
                         .populate({ path: 'user_id', select: '_id nickname image'})
                         .populate({ path: 'board_id', select: '_id title content createdAt updatedAt comment_id' })
                         .select('_id user_id board_id');
-
-        if (!liked.length) {
-            return {
-                status: 404,
-                message: "게시글이 존재하지 않습니다."
-            }
-        }
         return {
             status: 200,
             liked,

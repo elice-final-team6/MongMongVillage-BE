@@ -102,12 +102,6 @@ exports.getUserComments = async (userId) => {
                                 .select('_id nickname profilePicture');
         const comments = await Comment.find({ user_id: userId })
                                 .select('_id board_id content createdAt updatedAt');
-        if (!comments.length) {
-            return {
-                status: 404,
-                message: "댓글이 존재하지 않습니다."
-            }
-        }
         return {
             status: 200,
             user,
