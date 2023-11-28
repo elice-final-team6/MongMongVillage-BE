@@ -1,3 +1,5 @@
+const proj4 = require('proj4');
+
 const Cafe = require('./model/cafe.schema');
 const Review = require('../review/model/review.schema');
 
@@ -5,7 +7,11 @@ exports.initCafes = async () => {
     try  {
         const cafes = [];
         
+        const epsg5174 = "+proj=tmerc +lat_0=38 +lon_0=127.0028902777778 +k=1 +x_0=200000 +y_0=500000 +ellps=bessel +units=m +no_defs +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43"; 
+        const epsg4326 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+
         cafes.map(async (cafeInfo) => {
+            const [latitude, longitude] = proj4(epsg5174, epsg4326, [cafeInfo.longitude, cafeInfo.latitude]);
             await Cafe.create({
                 name: cafeInfo.name,
                 phone_number: cafeInfo.phone_number,
@@ -16,8 +22,8 @@ exports.initCafes = async () => {
                 menu: cafeInfo.menu,
                 image: "",
                 operating_time: cafeInfo.operating_time,
-                longitude: cafeInfo.longitude,
-                latitude: cafeInfo.latitude,
+                longitude: longitude,
+                latitude: latitude,
                 rating: 0,
             })
         });
@@ -81,14 +87,12 @@ exports.getCafesSortByRating = async () => {
 }
 
 // 카페 상세 리스트 - 리뷰 페이지네이션
-exports.getDetailCafe = async (cafeId, currentPage, perPage) => {
+exports.getDetailCafe = async (cafeId) => {
     try {
         const cafe = await Cafe.findById({ _id: cafeId });
         const total_number_of_reviews = await Review.find({ cafe_id: cafeId }).countDocuments({});
         const reviews = await Review.find({ cafe_id: cafeId })
                                     .sort({createdAt: -1})
-                                    .skip((currentPage - 1) * perPage)
-                                    .limit(perPage)
                                     .populate({ path: 'user_id', select: '_id nickname profilePicture'})
                                     .select('_id user_id images rating title content');
         if (!cafe) {
@@ -102,6 +106,29 @@ exports.getDetailCafe = async (cafeId, currentPage, perPage) => {
             total_number_of_reviews,
             cafe,
             reviews
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+exports.getSearchCafes = async (content) => {
+    try {
+        const options = [
+            { road_addr: new RegExp(content) },
+            { region_addr: new RegExp(content) },
+            { name: new RegExp(content) }
+        ];
+        const cafes = await Cafe.find({ $or: options });
+        if (!cafes.length) {
+            return {
+                status: 400,
+                message: '검색 결과가 없습니다.'
+            }
+        }
+        return {
+            status: 200,
+            cafes
         }
     } catch (error) {
         throw error;
