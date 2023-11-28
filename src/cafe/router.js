@@ -51,13 +51,27 @@ router.get('/rating', async (req, res, next) => {
     }
 });
 
+// 1. 기존 메인페이지에서 통합 검색은 애견카페 검색으로 변경
+// 2. 검색어 기준은 주소 기준 (00구, 00동, 00/ 가게 이름 별 검색은 추가기능)
+router.get('/search', async (req, res, next) => {
+    try {
+        const content = req.query.content;
+        const searchCafesResult = await cafeService.getSearchCafes(content);
+        if (searchCafesResult.message) {
+            return res.status(400).send(searchCafesResult.message);
+        }
+        return res.status(200).json(searchCafesResult);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
 // 상세 페이지
 router.get('/:id', async (req, res, next) => {
     try {
         const cafeId = req.params.id;
-        const currentPage = req.query.currentPage || 1;
-        const perPage = 5;
-        const cafeDetailResult = await cafeService.getDetailCafe(cafeId, currentPage, perPage);
+        const cafeDetailResult = await cafeService.getDetailCafe(cafeId);
         if (cafeDetailResult.message) {
             return res.status(404).send(cafeDetailResult.message);
         }
@@ -67,4 +81,5 @@ router.get('/:id', async (req, res, next) => {
         next(error);
     }
 });
+
 module.exports = router;
