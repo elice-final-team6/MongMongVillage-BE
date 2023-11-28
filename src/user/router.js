@@ -97,9 +97,9 @@ router.post(
 // 회원 정보 조회
 router.get(
   "/:userId",
-  JwtMiddleware.checkToken,
+  // JwtMiddleware.checkToken,
   asyncHandler(async (req, res) => {
-    const userId = req.token.userId;
+    const userId = req.params.userId;
 
     // ObjectId가 유효한지 확인
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -137,7 +137,7 @@ router.get(
 router.patch(
   "/:userId",
   JwtMiddleware.checkToken,
-  profileUpload.single("image"),
+  profileUpload.single("profilePicture"),
   async (req, res) => {
     try {
       const userId = req.token.userId;

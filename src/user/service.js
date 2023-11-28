@@ -53,8 +53,20 @@ class UserService {
 
   // 회원 정보 조회
   async getUserById(userId) {
-    return User.findById(userId).select("-password");
+    try {
+      const user = await User.findById(userId).select("-password");
+
+      // 프로필 이미지도 추가
+      if (user) {
+        user.profilePicture = user.profilePicture || null;
+      }
+
+      return user;
+    } catch (error) {
+      throw error;
+    }
   }
+
   // 회원 정보 수정
   async updateUser(userId, updates) {
     const user = await User.findByIdAndUpdate(userId, updates, {
