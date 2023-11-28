@@ -16,7 +16,8 @@ router.post(
   asyncHandler(async (req, res) => {
     try {
       const { error } = userJoiSchema.validate(req.body);
-      // 입력 데이터 유효성 검사
+
+      // 유효성 검사
       if (error) {
         return res.status(400).json({
           message: "Validation Error",
@@ -25,6 +26,8 @@ router.post(
       }
 
       // 회원가입 성공
+      const user = await userService.createUser(req.body);
+
       res.status(201).json({
         status: 201,
         message: "회원가입 성공",
@@ -34,16 +37,15 @@ router.post(
         // 이메일 중복 에러
         return res.status(400).json({
           status: 400,
-          message: "Duplicate email",
-          error: "This email address is already registered.",
+          message: "중복된 이메일",
+          error: "이미 등록된 이메일 주소입니다.",
         });
       }
-      // 기타 에러는 콘솔에 로깅
       console.error(error);
       res.status(400).json({
         status: 400,
-        message: "Error",
-        error: "An error occurred while processing your request.",
+        message: "에러",
+        error: "요청 처리 중에 오류가 발생했습니다.",
       });
     }
   })
