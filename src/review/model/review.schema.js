@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const { Schema } = mongoose;
 const {
   Types: { ObjectId },
@@ -9,6 +10,11 @@ const ReviewSchema = new Schema(
     user_id: {
       type: ObjectId,
       ref: "User",
+      required: true,
+    },
+    cafe_id: {
+      type: ObjectId,
+      ref: "Cafe",
       required: true,
     },
     role: {

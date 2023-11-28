@@ -26,6 +26,7 @@ const userSchema = new Schema({
   },
   profilePicture: {
     type: String,
+    default: null,
   },
   introduction: {
     type: String,

@@ -12,21 +12,21 @@ const reviewsUpload = imageUploadConfig("review");
 router.post(
   "/",
   JwtMiddleware.checkToken,
-  reviewsUpload.array("images"), // 이미지 업로드 설정 추가
+  reviewsUpload.array("images"),
   async (req, res, next) => {
     try {
-      const { title, content, rating } = req.body;
+      const { title, content, rating, cafe_id } = req.body;
       const userId = req.token.userId;
 
-      // 이미지 업로드가 진행되었을 때 이미지 경로를 저장
       const imageUrl = req.files ? req.files.map((file) => file.location) : [];
 
       const createReview = await ReviewService.createReview({
         user_id: userId,
+        cafe_id: cafe_id,
         title,
         content,
         rating,
-        images: imageUrl, // 이미지 경로 추가
+        images: imageUrl,
       });
 
       res.status(201).json({
@@ -50,16 +50,13 @@ router.get(
   "/",
   asyncHandler(async (req, res) => {
     try {
-      const reviewId = req.params.reviewId;
-      const sortBy = req.query.sortBy; // 쿼리 매개변수로 sortBy 받음
+      const sortBy = req.query.sortBy;
 
-      // 전체 리뷰 조회 메서드에 필터링 옵션 전달
       const reviews = await ReviewService.getAllReviews({ sortBy });
 
       res.status(200).json({
         status: 200,
         message: "Success",
-        reviewId,
         data: reviews,
       });
     } catch (error) {
@@ -79,7 +76,9 @@ router.get(
   asyncHandler(async (req, res) => {
     try {
       const reviewId = req.params.reviewId;
-      const review = await ReviewService.getReviewById(reviewId);
+      const userId = req.query.userId;
+
+      const review = await ReviewService.getReviewById(reviewId, userId);
 
       if (!review) {
         res.status(404).json({
@@ -88,11 +87,21 @@ router.get(
         });
         return;
       }
-      res.status(200).json({
+
+      const responseData = {
         status: 200,
         message: "성공",
-        data: review,
-      });
+        data: {
+          review,
+          user: {
+            _id: review.user_id._id,
+            nickname: review.user_id.nickname,
+            profileImage: review.user_id.profileImage || null,
+          },
+        },
+      };
+
+      res.status(200).json(responseData);
     } catch (error) {
       console.error(error);
       res.status(500).json({
@@ -108,21 +117,19 @@ router.get(
 router.patch(
   "/:reviewId",
   JwtMiddleware.checkToken,
-  reviewsUpload.array("images"), // 이미지 업로드 설정 추가
+  reviewsUpload.array("images"),
   asyncHandler(async (req, res) => {
     try {
       const userId = req.token.userId;
       const reviewId = req.params.reviewId;
       const { title, content, rating } = req.body;
 
-      // 수정할 데이터를 객체에 담음
       const updatedData = {
         title,
         content,
         rating,
       };
 
-      // 이미지가 업로드된 경우에만 업로드된 이미지 경로를 추가
       if (req.files && req.files.length > 0) {
         updatedData.images = req.files.map((file) => file.location);
       }
@@ -130,7 +137,7 @@ router.patch(
       const updatedReview = await ReviewService.updateReview(
         userId,
         reviewId,
-        updatedData // 수정된 데이터 전달
+        updatedData
       );
 
       res.status(200).json({
@@ -164,7 +171,6 @@ router.delete(
         data: deletedReview,
       });
     } else {
-      // 삭제된 게시글이 없는 경우
       res.status(404).json({
         status: 404,
         message: "게시글이 존재하지 않습니다.",
