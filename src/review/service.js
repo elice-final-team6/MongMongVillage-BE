@@ -21,9 +21,19 @@ class ReviewService {
   }
 
   // 전체 리뷰 조회
-  static async getAllReviews() {
+  static async getAllReviews({ sortBy }) {
     try {
-      const reviews = await Review.find();
+      let sortOption = {};
+
+      // 필터링 옵션에 따라 정렬 옵션 설정
+      if (sortBy === "latest") {
+        sortOption = { createdAt: -1 }; // 최신순
+      } else if (sortBy === "popular") {
+        sortOption = { rating: -1 }; // 인기순
+      }
+
+      // sort 옵션에 따라 정렬
+      const reviews = await Review.find().sort(sortOption);
       return reviews;
     } catch (error) {
       throw error;
