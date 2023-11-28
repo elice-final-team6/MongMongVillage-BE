@@ -74,7 +74,7 @@ router.get('/', async (req, res, next) => {
         else if (req.query.sortBy === 'likes') sortBy = '-like_count';
         else return res.status(400).send('잘못된 요청입니다.');
         const currentPage = req.query.currentPage || 1;
-        const perPage = 4;
+        const perPage = 10;
         const allBoardsResult = await boardService.getAllBoards(currentPage, perPage, sortBy);
         return res.status(200).json(allBoardsResult);
     } catch (error) {
@@ -91,7 +91,7 @@ router.get('/category/:name', async (req, res, next) => {
         else return res.status(400).send('잘못된 요청입니다.');
 
         const currentPage = req.query.currentPage || 1;
-        const perPage = 4;
+        const perPage = 10;
         const category = req.params.name;
         if (category !== 'info' 
             && category !== 'general' 
@@ -121,7 +121,7 @@ router.get('/best', async (req, res, next) => {
 router.get('/search', async (req, res, next) => {
     try {
         const currentPage = req.query.currentPage || 1;
-        const perPage = 4;
+        const perPage = 10;
         const content = req.query.content;
         const searchBoardsResult = await boardService.getSearchBoards(content, currentPage, perPage);
         if (searchBoardsResult.message) {
