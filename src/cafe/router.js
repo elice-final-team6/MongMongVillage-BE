@@ -5,11 +5,32 @@ const cafeService = require('./service');
 const { imageUploadConfig } = require('../utils/s3-multer');
 const cafesUpload = imageUploadConfig('cafe');
 
-router.post('/', cafesUpload.single('image'), async (req, res, next) => {
+router.get('/', async (req, res, next) => {
     try {
+        const getAllCafesResult = await cafeService.getAllCafes();
+        return res.status(200).json(getAllCafesResult);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+router.get('/init', async (req, res, next) => {
+    try {
+        const initCafesResult = await cafeService.initCafes();
+        return res.status(200).json(initCafesResult);
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+});
+
+router.patch('/:id', cafesUpload.single('image'), async (req, res, next) => {
+    try {
+        const cafeId = req.params.id;
         const cafe = req.body;
-        const createCafeResult = await cafeService.createCafe(cafe, req.file.location);
-        return res.status(201).json(createCafeResult);
+        const createCafeResult = await cafeService.updateCafe(cafeId, cafe, req.file.location);
+        return res.status(200).json(createCafeResult);
     } catch (error) {
         console.error(error);
         next(error);

@@ -8,10 +8,6 @@ const cafeSchema = new Schema({
         type: String,
         required: true,
     },
-    review_id: [{
-        type: ObjectId,
-        ref: "Review",
-    }],
     road_addr: { // 도로명주소
         type: String,
         required: true,
@@ -37,9 +33,18 @@ const cafeSchema = new Schema({
         type: String,
         default: null,
     },
+    phone_number: String,
     rating: {
         type: Number,
         default: 0,
+    },
+    longitude: {
+        type: String,
+        default: null,
+    },
+    latitude: {
+        type: String,
+        default: null,
     }
 }, { timestamps: true });
 
