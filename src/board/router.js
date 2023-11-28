@@ -213,9 +213,6 @@ router.get('/mypage/user/liked', JwtMiddleware.checkToken, async (req, res, next
     try {
         const userId = req.token.userId;
         const userLikedBoardResult = await boardService.getUserLikedBoards(userId);
-        if (userLikedBoardResult.message) {
-            res.status(404).send(userLikedBoardResult.message);
-        }
         return res.status(200).json(userLikedBoardResult);
     } catch (error) {
         console.error(error);

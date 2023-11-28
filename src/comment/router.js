@@ -56,9 +56,6 @@ router.get('/mypage/user', JwtMiddleware.checkToken, async (req, res, next) => {
     try {
        const userId = req.token.userId;
        const userCommentsResult = await commentService.getUserComments(userId);
-       if (userCommentsResult.message) {
-            return res.status(userCommentsResult.status).send(userCommentsResult.message);
-       }
        return res.status(200).json(userCommentsResult);
     } catch (error) {
         console.error(error);
