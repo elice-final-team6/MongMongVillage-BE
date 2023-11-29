@@ -1,6 +1,7 @@
 const { Board } = require('./model/board.schema');
 const Like = require('../board/model/like.schema');
 const { Comment } = require('../comment/model/comment.schema');
+const { User, Admin } = require('../user/model/user.schema');
 
 exports.createBoard = async ({ userId, title, content, animalType, category, imageUrl }) => {
     try {
@@ -56,13 +57,18 @@ exports.updateBoard = async ({ boardId, userId, title, content, animalType, cate
 
 exports.deleteBoard = async (userId, boardId) => {
     try {
-        const result = await Board.findOneAndDelete({ _id: boardId, user_id: userId });
+        let options;
+        const admin = await Admin.findById({ _id: userId });
+        if (admin) options = { _id: boardId };
+        else options = { _id: boardId, user_id: userId };
+
+        const result = await Board.findOneAndDelete(options);
         const deleteCommentResult = await Comment.findOneAndDelete({ board_id: boardId });
         const deleteLikesResult = await Like.findOneAndDelete({ board_id: boardId });
         if (!result) {
             return {
-                status: 404,
-                message: '존재하지 않는 게시글입니다.'
+                status: 400,
+                message: '게시글 삭제 실패'
             }
         }
         return {

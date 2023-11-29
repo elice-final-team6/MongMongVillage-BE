@@ -57,17 +57,24 @@ router.post(
   "/login",
   asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-    const userLogin = await userService.authenticateUser(email, password);
+
+    // 사용자와 관리자를 모두 확인
+    const userLogin = await userService.authenticateUser(email, password, [
+      "User",
+      "Admin",
+    ]);
 
     // 로그인 안됨
     if (!userLogin.success) {
       // 가입되지 않은 이메일
       if (userLogin.fail == "email") {
+        console.log("가입되지 않은 이메일입니다.", email);
         return res.status(401).json({
           status: 401,
           message: "가입되지 않은 이메일입니다.",
         });
       } else if (userLogin.fail == "password") {
+        console.log("비밀번호가 올바르지 않습니다.", email);
         return res.status(401).json({
           status: 401,
           message: "비밀번호가 올바르지 않습니다.",
@@ -85,6 +92,12 @@ router.post(
     };
 
     const token = JWT.createToken(tokenPayload);
+
+    // 관리자계정인 경우
+    if (role === "ADMIN") {
+      console.log("관리자 로그인 성공");
+      await User.findByIdAndUpdate(user._id, { role: "ADMIN" });
+    }
 
     res.status(200).json({
       status: 200,

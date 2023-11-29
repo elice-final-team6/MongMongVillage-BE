@@ -1,4 +1,4 @@
-const { User } = require("./model/user.schema");
+const { User, Admin } = require("./model/user.schema");
 const bcrypt = require("bcrypt");
 
 class UserService {
@@ -37,18 +37,34 @@ class UserService {
   }
 
   // 사용자 인증
-  async authenticateUser(email, password) {
-    const userEmail = await User.findOne({ email });
+  async authenticateUser(email, password, roles) {
+    for (const role of roles) {
+      let foundUser;
 
-    if (!userEmail) {
-      return { success: false, fail: "email" };
+      if (role === "User") {
+        foundUser = await User.findOne({ email });
+      } else if (role === "Admin") {
+        foundUser = await Admin.findOne({ email });
+      }
+
+      if (foundUser) {
+        const passwordMatch = await bcrypt.compare(
+          password,
+          foundUser.password
+        );
+        if (passwordMatch) {
+          // 비밀번호 일치하는 경우
+          return { success: true, user: foundUser };
+        } else {
+          // 비밀번호 일치하지 않는 경우
+          return { success: false, fail: "password" };
+        }
+      }
     }
 
-    const passwordMatch = await bcrypt.compare(password, userEmail.password);
-    if (!passwordMatch) {
-      return { success: false, fail: "password" };
-    }
-    return { success: true, user: userEmail };
+    // 모두 찾지 못한 경우
+    console.log("가입되지 않은 이메일입니다.", email);
+    return { success: false, fail: "email" };
   }
 
   // 회원 정보 조회
