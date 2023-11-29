@@ -2,7 +2,7 @@ const express = require("express");
 const asyncHandler = require("../utils/async-handler");
 const router = express.Router();
 const userService = require("./service");
-const { JoiSchema: userJoiSchema } = require("./model/user.schema");
+const { JoiSchemas: userJoiSchemas } = require("./model/user.schema");
 const JWT = require("../utils/jwt");
 const mongoose = require("mongoose");
 const JwtMiddleware = require("../middleware/jwt-handler");
@@ -16,14 +16,15 @@ router.post(
   "/signup",
   asyncHandler(async (req, res) => {
     try {
-      const { error } = userJoiSchema.validate(req.body);
+      const { error } = userJoiSchemas.user.validate(req.body);
 
       // 유효성 검사
       if (error) {
-        return res.status(400).json({
+        throw {
+          status: 400,
           message: "Validation Error",
           error: error.details.map((detail) => detail.message),
-        });
+        };
       }
 
       // 회원가입 성공
@@ -43,10 +44,10 @@ router.post(
         });
       }
       console.error(error);
-      res.status(400).json({
-        status: 400,
-        message: "에러",
-        error: "요청 처리 중에 오류가 발생했습니다.",
+      res.status(error.status || 500).json({
+        status: error.status || 500,
+        message: error.message || "Internal Server Error",
+        error: error.error || "요청 처리 중에 오류가 발생했습니다.",
       });
     }
   })

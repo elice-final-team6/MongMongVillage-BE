@@ -54,7 +54,7 @@ router.get(
       const itemsPerPage = parseInt(req.query.itemsPerPage) || 10;
       const sortBy = req.query.sortBy;
 
-      const reviews = await ReviewService.getAllReviews({
+      const { reviews, totalReviews } = await ReviewService.getAllReviews({
         page,
         itemsPerPage,
         sortBy,
@@ -63,7 +63,10 @@ router.get(
       res.status(200).json({
         status: 200,
         message: "Success",
-        data: reviews,
+        data: {
+          reviews,
+          totalReviews,
+        },
       });
     } catch (error) {
       console.error(error);
@@ -180,6 +183,39 @@ router.delete(
       res.status(404).json({
         status: 404,
         message: "게시글이 존재하지 않습니다.",
+      });
+    }
+  })
+);
+
+// 사용자가 작성한 리뷰
+router.get(
+  "/:userId/my-reviews",
+  JwtMiddleware.checkToken,
+  asyncHandler(async (req, res) => {
+    try {
+      const targetUserId = req.params.userId; // 특정 사용자의 ID
+      const page = parseInt(req.query.page) || 1;
+      const itemsPerPage = parseInt(req.query.itemsPerPage) || 10;
+      const sortBy = req.query.sortBy;
+
+      const reviews = await ReviewService.getReviewsByUser(targetUserId, {
+        page,
+        itemsPerPage,
+        sortBy,
+      });
+
+      res.status(200).json({
+        status: 200,
+        message: "Success",
+        data: reviews,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: 500,
+        message: "Internal Server Error",
+        error: error.message,
       });
     }
   })

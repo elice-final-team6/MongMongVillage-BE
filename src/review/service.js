@@ -46,7 +46,9 @@ class ReviewService {
           select: "name",
         });
 
-      return reviews;
+      const totalReviews = await Review.countDocuments(); // 전체 리뷰 수 조회
+
+      return { reviews, totalReviews };
     } catch (error) {
       throw error;
     }
@@ -107,7 +109,35 @@ class ReviewService {
     }
   }
 
-  // (이전 코드 생략)
+  static async getReviewsByUser(
+    userId,
+    { page = 1, itemsPerPage = 10, sortBy }
+  ) {
+    try {
+      let sortOption = {};
+
+      if (sortBy === "latest") {
+        sortOption = { createdAt: -1 };
+      } else if (sortBy === "popular") {
+        sortOption = { rating: -1 };
+      }
+
+      const reviews = await Review.find({
+        user_id: mongoose.Types.ObjectId(userId),
+      })
+        .sort(sortOption)
+        .skip((page - 1) * itemsPerPage)
+        .limit(itemsPerPage)
+        .populate({
+          path: "cafe_id",
+          select: "name",
+        });
+
+      return reviews;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   static async deleteReview(userId, reviewId) {
     try {
