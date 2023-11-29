@@ -1,7 +1,7 @@
 const { Board } = require('./model/board.schema');
 const Like = require('../board/model/like.schema');
 const { Comment } = require('../comment/model/comment.schema');
-const { User } = require('../user/model/user.schema');
+const { User, Admin } = require('../user/model/user.schema');
 
 exports.createBoard = async ({ userId, title, content, animalType, category, imageUrl }) => {
     try {
@@ -58,10 +58,9 @@ exports.updateBoard = async ({ boardId, userId, title, content, animalType, cate
 exports.deleteBoard = async (userId, boardId) => {
     try {
         let options;
-        const user = await User.findById({ _id: userId });
-        if (user.role === 'ADMIN') {
-            options = { _id: boardId };
-        } else options = { _id: boardId, user_id: userId };
+        const admin = await Admin.findById({ _id: userId });
+        if (admin) options = { _id: boardId };
+        else options = { _id: boardId, user_id: userId };
 
         const result = await Board.findOneAndDelete(options);
         const deleteCommentResult = await Comment.findOneAndDelete({ board_id: boardId });

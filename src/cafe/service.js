@@ -86,11 +86,10 @@ exports.getCafesSortByRating = async () => {
     }
 }
 
-// 카페 상세 리스트 - 리뷰 페이지네이션
+// 카페 상세 리스트
 exports.getDetailCafe = async (cafeId) => {
     try {
         const cafe = await Cafe.findById({ _id: cafeId });
-        const total_number_of_reviews = await Review.find({ cafe_id: cafeId }).countDocuments({});
         const reviews = await Review.find({ cafe_id: cafeId })
                                     .sort({createdAt: -1})
                                     .populate({ path: 'user_id', select: '_id nickname profilePicture'})
@@ -103,7 +102,6 @@ exports.getDetailCafe = async (cafeId) => {
         }
         return {
             status: 200,
-            total_number_of_reviews,
             cafe,
             reviews
         }
