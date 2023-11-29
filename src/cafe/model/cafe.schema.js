@@ -52,12 +52,6 @@ const cafeSchema = new Schema(
       type: String,
       default: null,
     },
-    reviews: [
-      {
-        type: ObjectId,
-        ref: "Review",
-      },
-    ],
   },
   { timestamps: true }
 );
