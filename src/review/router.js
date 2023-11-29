@@ -50,9 +50,15 @@ router.get(
   "/",
   asyncHandler(async (req, res) => {
     try {
+      const page = parseInt(req.query.page) || 1;
+      const itemsPerPage = parseInt(req.query.itemsPerPage) || 10;
       const sortBy = req.query.sortBy;
 
-      const reviews = await ReviewService.getAllReviews({ sortBy });
+      const reviews = await ReviewService.getAllReviews({
+        page,
+        itemsPerPage,
+        sortBy,
+      });
 
       res.status(200).json({
         status: 200,

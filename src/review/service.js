@@ -27,7 +27,7 @@ class ReviewService {
     }
   }
 
-  static async getAllReviews({ sortBy }) {
+  static async getAllReviews({ page = 1, itemsPerPage = 10, sortBy }) {
     try {
       let sortOption = {};
 
@@ -37,10 +37,14 @@ class ReviewService {
         sortOption = { rating: -1 };
       }
 
-      const reviews = await Review.find().sort(sortOption).populate({
-        path: "cafe_id",
-        select: "name",
-      });
+      const reviews = await Review.find()
+        .sort(sortOption)
+        .skip((page - 1) * itemsPerPage)
+        .limit(itemsPerPage)
+        .populate({
+          path: "cafe_id",
+          select: "name",
+        });
 
       return reviews;
     } catch (error) {
