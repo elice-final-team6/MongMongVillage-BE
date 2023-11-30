@@ -112,7 +112,8 @@ exports.getCategoryBoards = async ({ category, currentPage, perPage, sortBy }) =
                     .find({ category: category })
                     .sort(sortBy)
                     .skip((currentPage - 1) * perPage)
-                    .limit(perPage);
+                    .limit(perPage)
+                    .populate({ path: 'user_id', select: '_id profilePicture nickname' });
         if (!boards.length) {
             return {
                 status: 404,
@@ -133,7 +134,7 @@ exports.getCategoryBoards = async ({ category, currentPage, perPage, sortBy }) =
 exports.getBestBoards = async () => {
     try {
         const boards = await Board.find({})
-                    .populate({ path: 'user_id', select: '_id nickname' })
+                    .populate({ path: 'user_id', select: '_id profilePicture nickname' })
                     .sort('-like_count -createdAt')
                     .limit(4)
                     .select('_id images title like_count')
@@ -190,7 +191,7 @@ exports.getUserBoards = async (userId) => {
 exports.getUserLikedBoards = async (userId) => {
     try {
         const liked = await Like.find({ user_id: userId })
-                        .populate({ path: 'user_id', select: '_id nickname image'})
+                        .populate({ path: 'user_id', select: '_id nickname profilePicture'})
                         .populate({ path: 'board_id', select: '_id title content createdAt updatedAt comment_id' })
                         .select('_id user_id board_id');
         return {
