@@ -1,11 +1,10 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const { User, Admin } = require("./src/user/model/user.schema"); // 모델의 경로에 맞게 수정
+const { User, Admin } = require("./src/user/model/user.schema");
 require("dotenv").config();
 
 async function seedAdmin() {
   try {
-    // Check if admin already exists
     const existingAdmin = await Admin.findOne({ email: "admin@mongmong.com" });
 
     if (existingAdmin) {
@@ -30,7 +29,6 @@ async function seedAdmin() {
   }
 }
 
-// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -38,5 +36,4 @@ mongoose.connect(process.env.MONGO_URL, {
 
 console.log("MongoDB URL:", process.env.MONGO_URL);
 
-// Run the seeding function
 seedAdmin();

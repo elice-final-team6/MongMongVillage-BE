@@ -4,7 +4,6 @@ const { Review } = require("./model/review.schema");
 const ReviewService = require("./service");
 const JwtMiddleware = require("../middleware/jwt-handler");
 const router = express.Router();
-
 const { imageUploadConfig } = require("../utils/s3-multer");
 const reviewsUpload = imageUploadConfig("review");
 
@@ -54,7 +53,7 @@ router.get(
       const itemsPerPage = parseInt(req.query.itemsPerPage) || 10;
       const sortBy = req.query.sortBy;
 
-      const reviews = await ReviewService.getAllReviews({
+      const { reviews, totalReviews } = await ReviewService.getAllReviews({
         page,
         itemsPerPage,
         sortBy,
@@ -63,7 +62,10 @@ router.get(
       res.status(200).json({
         status: 200,
         message: "Success",
-        data: reviews,
+        data: {
+          reviews,
+          totalReviews,
+        },
       });
     } catch (error) {
       console.error(error);
@@ -162,27 +164,59 @@ router.patch(
   })
 );
 
+// 리뷰 삭제
 router.delete(
   "/:reviewId",
   JwtMiddleware.checkToken,
   asyncHandler(async (req, res) => {
-    const userId = req.token.userId;
-    const reviewId = req.params.reviewId;
+    try {
+      const userId = req.token.userId;
+      const reviewId = req.params.reviewId;
 
-    const deletedReview = await ReviewService.deleteReview(userId, reviewId);
-    if (deletedReview) {
-      res.status(200).json({
-        status: 200,
-        message: "게시글이 삭제되었습니다.",
-        data: deletedReview,
-      });
-    } else {
-      res.status(404).json({
-        status: 404,
-        message: "게시글이 존재하지 않습니다.",
+      const isAdmin = req.token.role === "admin";
+      if (!isAdmin && userId !== req.token.userId) {
+        return res.status(403).json({
+          status: 403,
+          message: "사용자 권한이 없습니다.",
+        });
+      }
+
+      const deletedReview = await ReviewService.deleteReview(userId, reviewId);
+
+      if (deletedReview) {
+        res.status(200).json({
+          data: deletedReview,
+        });
+      } else {
+        res.status(404).json({
+          data: deletedReview,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        status: 500,
+        message: "Internal Server Error",
+        error: error.message,
       });
     }
   })
 );
+
+// 사용자가 작성한 리뷰
+router.get("/mypage/user", JwtMiddleware.checkToken, async (req, res, next) => {
+  try {
+    const userId = req.token.userId;
+
+    const userReviews = await ReviewService.getUserReviews(userId);
+    return res.status(200).json({
+      status: 200,
+      reviews: userReviews,
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
 
 module.exports = router;

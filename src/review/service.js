@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
+const { User, Admin } = require("../user/model/user.schema");
 const Review = require("./model/review.schema");
+const UserService = require("../user/service");
 
 class ReviewService {
   static async createReview({
@@ -46,7 +48,9 @@ class ReviewService {
           select: "name",
         });
 
-      return reviews;
+      const totalReviews = await Review.countDocuments(); // 전체 리뷰 수 조회
+
+      return { reviews, totalReviews };
     } catch (error) {
       throw error;
     }
@@ -65,7 +69,7 @@ class ReviewService {
         });
 
       if (!review) {
-        throw new Error("Review not found");
+        throw new Error("리뷰가 존재하지 않습니다.");
       }
 
       if (userId && review.user_id._id.toString() !== userId) {
@@ -107,29 +111,68 @@ class ReviewService {
     }
   }
 
-  // (이전 코드 생략)
+  // static async getReviewsByUser(
+  //   userId,
+  //   { page = 1, itemsPerPage = 10, sortBy }
+  // ) {
+  //   try {
+  //     let sortOption = {};
+
+  //     if (sortBy === "latest") {
+  //       sortOption = { createdAt: -1 };
+  //     } else if (sortBy === "popular") {
+  //       sortOption = { rating: -1 };
+  //     }
+
+  //     const reviews = await Review.find({
+  //       user_id: mongoose.Types.ObjectId(userId),
+  //     })
+  //       .sort(sortOption)
+  //       .skip((page - 1) * itemsPerPage)
+  //       .limit(itemsPerPage)
+  //       .populate({
+  //         path: "cafe_id",
+  //         select: "name",
+  //       });
+
+  //     return reviews;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
   static async deleteReview(userId, reviewId) {
     try {
-      const isValidObjectId = mongoose.isValidObjectId(reviewId);
+      let options;
+      const admin = await Admin.findById({ _id: userId });
+      if (admin) options = { _id: reviewId };
+      else options = { _id: reviewId, user_id: userId };
 
-      if (!isValidObjectId) {
-        throw new Error("Invalid Review ObjectId");
+      const result = await Review.findOneAndDelete(options);
+
+      if (!result) {
+        return {
+          status: 404,
+          message: "게시글이 존재하지 않습니다.",
+        };
       }
 
-      const existingReview = await Review.findOne({
-        _id: reviewId,
-        user_id: userId,
-      });
-
-      if (!existingReview) {
-        throw new Error("Review not found or user does not have permission");
-      }
-
-      const deletedReview = await Review.findByIdAndDelete(reviewId);
-
-      return deletedReview;
+      return {
+        status: 200,
+        message: "게시글이 삭제되었습니다.",
+        data: result,
+      };
     } catch (error) {
+      throw error;
+    }
+  }
+
+  static async getUserReviews(userId) {
+    try {
+      const reviews = await Review.find({ user_id: userId });
+      return reviews;
+    } catch (error) {
+      console.error(error);
       throw error;
     }
   }

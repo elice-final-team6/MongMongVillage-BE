@@ -2,7 +2,7 @@ const express = require("express");
 const asyncHandler = require("../utils/async-handler");
 const router = express.Router();
 const userService = require("./service");
-const { JoiSchema: userJoiSchema } = require("./model/user.schema");
+const { JoiSchemas: userJoiSchemas } = require("./model/user.schema");
 const JWT = require("../utils/jwt");
 const mongoose = require("mongoose");
 const JwtMiddleware = require("../middleware/jwt-handler");
@@ -10,20 +10,22 @@ const auth = require("../middleware/auth");
 const { imageUploadConfig } = require("../utils/s3-multer");
 const profileUpload = imageUploadConfig("user");
 const { User } = require("./model/user.schema");
+const ReviewService = require("../review/service");
 
 // 회원가입
 router.post(
   "/signup",
   asyncHandler(async (req, res) => {
     try {
-      const { error } = userJoiSchema.validate(req.body);
+      const { error } = userJoiSchemas.user.validate(req.body);
 
       // 유효성 검사
       if (error) {
-        return res.status(400).json({
+        throw {
+          status: 400,
           message: "Validation Error",
           error: error.details.map((detail) => detail.message),
-        });
+        };
       }
 
       // 회원가입 성공
@@ -43,10 +45,10 @@ router.post(
         });
       }
       console.error(error);
-      res.status(400).json({
-        status: 400,
-        message: "에러",
-        error: "요청 처리 중에 오류가 발생했습니다.",
+      res.status(error.status || 500).json({
+        status: error.status || 500,
+        message: error.message || "Internal Server Error",
+        error: error.error || "요청 처리 중에 오류가 발생했습니다.",
       });
     }
   })
@@ -102,7 +104,7 @@ router.post(
     res.status(200).json({
       status: 200,
       message: "로그인 성공",
-      data: { token, userId: user._id },
+      data: { token, userId: user._id, role },
     });
   })
 );
@@ -113,14 +115,6 @@ router.get(
   // JwtMiddleware.checkToken,
   asyncHandler(async (req, res) => {
     const userId = req.params.userId;
-
-    // ObjectId가 유효한지 확인
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({
-        status: 400,
-        message: "Invalid ObjectId",
-      });
-    }
 
     try {
       const user = await userService.getUserById(userId);
@@ -210,9 +204,29 @@ router.delete(
   })
 );
 
-// 토큰 유효성 검사
-router.get("/check-token", JwtMiddleware.checkToken, (req, res) => {
-  res.status(200).json({ valid: true, message: "토큰이 유효합니다." });
+router.get("/me", JwtMiddleware.checkToken, async (req, res) => {
+  try {
+    const userId = req.token.userId;
+    const user = await userService.getUserById(userId);
+
+    if (!user) {
+      res.status(404).json({
+        status: 404,
+        message: "회원이 존재하지 않습니다.",
+      });
+    } else {
+      res.status(200).json({
+        status: 200,
+        message: "조회 성공",
+        data: { ...user.toObject(), password: undefined },
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      status: 500,
+      message: "Internal Server Error",
+    });
+  }
 });
 
 // 이메일 중복 확인
