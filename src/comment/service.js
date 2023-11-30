@@ -1,5 +1,5 @@
 const { Board } = require('../board/model/board.schema');
-const { User } = require('../user/model/user.schema');
+const { User, Admin } = require('../user/model/user.schema');
 const Like = require('../board/model/like.schema');
 const { Comment } = require('./model/comment.schema');
 
@@ -63,6 +63,11 @@ exports.updateComment = async ({ boardId, userId, commentId, content }) => {
 
 exports.deleteComment = async ({ boardId, commentId, userId }) => {
     try {
+        let options;
+        const admin = await Admin.findById({ _id: userId });
+        if (admin) options = { _id: commentId };
+        else options = { _id: commentId, user_id: userId };
+
         const board = await Board.findById({ _id: boardId });
         if (!board) {
             return {
@@ -70,7 +75,7 @@ exports.deleteComment = async ({ boardId, commentId, userId }) => {
                 message: "존재하지 않는 게시글입니다."
             }
         }
-        const comment = await Comment.findOneAndDelete({ _id: commentId, user_id: userId });
+        const comment = await Comment.findOneAndDelete(options);
         if (!comment) {
             return {
                 status: 400,
