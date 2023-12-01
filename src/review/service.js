@@ -34,7 +34,7 @@ class ReviewService {
       let sortOption = {};
 
       if (sortBy === "latest") {
-        sortOption = { createdAt: -1 };
+        sortOption = { rating: -1, createdAt: -1 }; // 별점이 같을 경우 최신순으로 정렬됨
       } else if (sortBy === "popular") {
         sortOption = { rating: -1 };
       }
@@ -65,7 +65,7 @@ class ReviewService {
         })
         .populate({
           path: "cafe_id",
-          select: "name", // 필요한 카페 정보 선택
+          select: "name",
         });
 
       if (!review) {
@@ -110,36 +110,6 @@ class ReviewService {
       throw error;
     }
   }
-
-  // static async getReviewsByUser(
-  //   userId,
-  //   { page = 1, itemsPerPage = 10, sortBy }
-  // ) {
-  //   try {
-  //     let sortOption = {};
-
-  //     if (sortBy === "latest") {
-  //       sortOption = { createdAt: -1 };
-  //     } else if (sortBy === "popular") {
-  //       sortOption = { rating: -1 };
-  //     }
-
-  //     const reviews = await Review.find({
-  //       user_id: mongoose.Types.ObjectId(userId),
-  //     })
-  //       .sort(sortOption)
-  //       .skip((page - 1) * itemsPerPage)
-  //       .limit(itemsPerPage)
-  //       .populate({
-  //         path: "cafe_id",
-  //         select: "name",
-  //       });
-
-  //     return reviews;
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
 
   static async deleteReview(userId, reviewId) {
     try {
