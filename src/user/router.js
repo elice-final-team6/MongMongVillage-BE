@@ -12,6 +12,14 @@ const profileUpload = imageUploadConfig("user");
 const { User } = require("./model/user.schema");
 const ReviewService = require("../review/service");
 
+// 토큰 유효성 검사
+router.get("/token-check", JwtMiddleware.checkToken, (req, res) => {
+  res.status(200).json({
+    status: 200,
+    message: "Token is valid",
+  });
+});
+
 // 회원가입
 router.post(
   "/signup",
@@ -112,7 +120,6 @@ router.post(
 // 회원 정보 조회
 router.get(
   "/:userId",
-  // JwtMiddleware.checkToken,
   asyncHandler(async (req, res) => {
     const userId = req.params.userId;
 
@@ -120,21 +127,22 @@ router.get(
       const user = await userService.getUserById(userId);
 
       if (!user) {
-        res.status(404).json({
+        return res.status(404).json({
           status: 404,
           message: "회원이 존재하지 않습니다.",
         });
-      } else {
-        res.status(200).json({
-          status: 200,
-          message: "조회 성공",
-          data: { ...user.toObject(), password: undefined },
-        });
       }
+
+      return res.status(200).json({
+        status: 200,
+        message: "조회 성공",
+        data: { ...user.toObject(), password: undefined },
+      });
     } catch (error) {
-      res.status(400).json({
+      console.error(error);
+      return res.status(400).json({
         status: 400,
-        message: "Invalid ObjectId",
+        message: "Invalid UserId",
       });
     }
   })
@@ -203,31 +211,6 @@ router.delete(
     }
   })
 );
-
-router.get("/me", JwtMiddleware.checkToken, async (req, res) => {
-  try {
-    const userId = req.token.userId;
-    const user = await userService.getUserById(userId);
-
-    if (!user) {
-      res.status(404).json({
-        status: 404,
-        message: "회원이 존재하지 않습니다.",
-      });
-    } else {
-      res.status(200).json({
-        status: 200,
-        message: "조회 성공",
-        data: { ...user.toObject(), password: undefined },
-      });
-    }
-  } catch (error) {
-    res.status(500).json({
-      status: 500,
-      message: "Internal Server Error",
-    });
-  }
-});
 
 // 이메일 중복 확인
 router.get(
