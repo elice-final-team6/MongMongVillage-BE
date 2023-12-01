@@ -33,7 +33,7 @@ class ReviewService {
     try {
       let sortOption = {};
 
-      if (sortBy === "latest") {
+      if (sortBy === "popular") {
         sortOption = { rating: -1, createdAt: -1 }; // 별점이 같을 경우 최신순으로 정렬됨
       } else if (sortBy === "popular") {
         sortOption = { rating: -1 };
