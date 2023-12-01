@@ -56,47 +56,20 @@ exports.updateCafe = async (cafeId, cafeInfo, imageUrl) => {
   try {
     console.log(cafeId, imageUrl);
 
-    const reviews = await Review.find({ cafe_id: cafeId });
+    const updatedCafe = await Cafe.findOneAndUpdate(
+      { _id: cafeId },
+      {
+        image: imageUrl,
+        longitude: cafeInfo.longitude,
+        latitude: cafeInfo.latitude,
+      },
+      { new: true }
+    );
 
-    if (reviews.length > 0) {
-      const totalRating = reviews.reduce(
-        (sum, review) => sum + review.rating,
-        0
-      );
-      const averageRating = totalRating / reviews.length;
-
-      const updatedCafe = await Cafe.findOneAndUpdate(
-        { _id: cafeId },
-        {
-          image: imageUrl,
-          longitude: cafeInfo.longitude,
-          latitude: cafeInfo.latitude,
-          rating: averageRating,
-        },
-        { new: true }
-      );
-
-      return {
-        status: 201,
-        cafe: updatedCafe,
-      };
-    } else {
-      const updatedCafe = await Cafe.findOneAndUpdate(
-        { _id: cafeId },
-        {
-          image: imageUrl,
-          longitude: cafeInfo.longitude,
-          latitude: cafeInfo.latitude,
-          rating: 0,
-        },
-        { new: true }
-      );
-
-      return {
-        status: 201,
-        cafe: updatedCafe,
-      };
-    }
+    return {
+      status: 200,
+      cafe: updatedCafe,
+    };
   } catch (error) {
     throw error;
   }
