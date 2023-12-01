@@ -33,10 +33,10 @@ class ReviewService {
     try {
       let sortOption = {};
 
-      if (sortBy === "popular") {
-        sortOption = { rating: -1, createdAt: -1 }; // 별점이 같을 경우 최신순으로 정렬됨
+      if (sortBy === "latest") {
+        sortOption = { rating: -1, createdAt: -1 };
       } else if (sortBy === "popular") {
-        sortOption = { rating: -1 };
+        sortOption = { rating: -1, createdAt: -1 };
       }
 
       const reviews = await Review.find()
