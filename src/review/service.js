@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { User, Admin } = require("../user/model/user.schema");
 const Review = require("./model/review.schema");
-const UserService = require("../user/service");
+const Cafe = require("../cafe/model/cafe.schema");
 
 class ReviewService {
   static async createReview({
@@ -23,6 +23,9 @@ class ReviewService {
       });
 
       const writeReview = await newReview.save();
+
+      await this.updateCafeRating(cafe_id);
+
       return writeReview;
     } catch (error) {
       throw error;
@@ -33,9 +36,7 @@ class ReviewService {
     try {
       let sortOption = {};
 
-      if (sortBy === "latest") {
-        sortOption = { rating: -1, createdAt: -1 };
-      } else if (sortBy === "popular") {
+      if (sortBy === "latest" || sortBy === "popular") {
         sortOption = { rating: -1, createdAt: -1 };
       }
 
@@ -48,7 +49,7 @@ class ReviewService {
           select: "name",
         });
 
-      const totalReviews = await Review.countDocuments(); // 전체 리뷰 수 조회
+      const totalReviews = await Review.countDocuments();
 
       return { reviews, totalReviews };
     } catch (error) {
@@ -105,8 +106,34 @@ class ReviewService {
         { new: true }
       );
 
+      await this.updateCafeRating(updatedReview.cafe_id);
+
       return updatedReview;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  static async updateCafeRating(cafeId) {
+    try {
+      const reviews = await Review.find({ cafe_id: cafeId });
+
+      if (reviews.length > 0) {
+        const totalRating = reviews.reduce(
+          (sum, review) => sum + review.rating,
+          0
+        );
+        const averageRating = totalRating / reviews.length;
+
+        const updatedCafe = await Cafe.findByIdAndUpdate(cafeId, {
+          rating: parseFloat(averageRating.toFixed(1)),
+        });
+      } else {
+        // 리뷰가 없을 경우 rating = 0
+        await Cafe.findByIdAndUpdate(cafeId, { rating: 0 });
+      }
+    } catch (error) {
+      console.error("카페 평점 업데이트 중 오류 발생:", error);
       throw error;
     }
   }
@@ -126,6 +153,8 @@ class ReviewService {
           message: "게시글이 존재하지 않습니다.",
         };
       }
+
+      await this.updateCafeRating(result.cafe_id);
 
       return {
         status: 200,

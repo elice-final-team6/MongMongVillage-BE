@@ -141,24 +141,26 @@ exports.getDetailCafe = async (cafeId) => {
     }
 
     let averageRating = 0;
-
     if (reviews.length > 0) {
       const totalRating = reviews.reduce(
         (sum, review) => sum + review.rating,
         0
       );
       averageRating = totalRating / reviews.length;
+      averageRating = Math.round(averageRating * 10) / 10;
     }
 
-    const cafeData = cafe.toObject();
-    cafeData.averageRating = averageRating;
+    if (reviews.length === 0) {
+      return {
+        status: 200,
+        cafe,
+        reviews: [],
+      };
+    }
 
     return {
       status: 200,
-      cafe: {
-        ...cafeData,
-        averageRating: parseFloat(averageRating.toFixed(1)),
-      },
+      cafe: { ...cafe.toObject(), rating: averageRating },
       reviews,
     };
   } catch (error) {
