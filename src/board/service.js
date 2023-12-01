@@ -209,6 +209,7 @@ exports.getDetailBoard = async (boardId) => {
             .populate({ path: 'user_id', select: '_id nickname profilePicture' });
         const comments = await Comment.find({ board_id: boardId })
             .select('_id user_id content createdAt updatedAt')
+            .sort({createdAt: -1})
             .populate({ path: 'user_id', select: '_id profilePicture nickname' });
 
         console.log('게시글: ', board);
