@@ -71,7 +71,7 @@ router.get('/', async (req, res, next) => {
     try {
         let sortBy;
         if (!req.query.sortBy) sortBy = '-createdAt';
-        else if (req.query.sortBy === 'likes') sortBy = '-like_count';
+        else if (req.query.sortBy === 'likes') sortBy = '-like_count -createdAt';
         else return res.status(400).send('잘못된 요청입니다.');
         const currentPage = req.query.currentPage || 1;
         const perPage = 10;
@@ -87,7 +87,7 @@ router.get('/category/:name', async (req, res, next) => {
     try {
         let sortBy;
         if (!req.query.sortBy) sortBy = '-createdAt';
-        else if (req.query.sortBy === 'likes') sortBy = '-like_count';
+        else if (req.query.sortBy === 'likes') sortBy = '-like_count -createdAt';
         else return res.status(400).send('잘못된 요청입니다.');
 
         const currentPage = req.query.currentPage || 1;
