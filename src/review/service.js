@@ -35,11 +35,10 @@ class ReviewService {
   static async getAllReviews({ page = 1, itemsPerPage = 10, sortBy }) {
     try {
       let sortOption = {};
+      if (sortBy === 'latest') sortOption = { createdAt: -1 };
+      else if(sortBy === 'popular') sortOption = { rating: -1, createdAt: -1 };
 
-      if (sortBy === "latest" || sortBy === "popular") {
-        sortOption = { rating: -1, createdAt: -1 };
-      }
-
+      console.log(sortOption);
       const reviews = await Review.find()
         .sort(sortOption)
         .skip((page - 1) * itemsPerPage)
