@@ -16,7 +16,7 @@ connect();
 
 app.use(
   cors({
-    origin: "https://www.mongmongvillage.store",
+    origin: "https://www.mongmong.store",
     credentials: false,
   })
 );
